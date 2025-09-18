@@ -1,0 +1,25 @@
+[project]
+name = "githubaquarium-back"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dj-rest-auth[with-social]>=7.0.1",
+    "django-allauth>=65.11.2",
+    "django-cors-headers>=4.8.0",
+    "django-environ>=0.12.0",
+    "djangorestframework>=3.16.1",
+    "drf-social-oauth2>=3.1.0",
+    "gunicorn>=23.0.0",
+    "pygithub>=2.8.1",
+    "requests>=2.32.5",
+    "uvicorn>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "django-extensions>=4.1",
+    "pydotplus>=2.0.2",
+    "ruff>=0.13.0",
+]
