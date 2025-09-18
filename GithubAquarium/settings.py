@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import environ
 import base64
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,6 +39,8 @@ INSTALLED_APPS = [
     # DRF
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 
     # dj-rest-auth
     'dj_rest_auth',
@@ -102,19 +105,64 @@ SOCIALACCOUNT_EMAIL_REQUIRED = False  # GitHub may not always provide email
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        # 세션 인증은 Django Admin 등 브라우저 기반 테스트용
+        'rest_framework.authentication.SessionAuthentication', 
+        # JWT 인증을 기본 인증 방식으로 설정
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
+# --- dj-rest-auth JWT 설정 ---
+# dj-rest-auth가 JWT를 사용하도록 명시하고, 세션 로그인은 비활성화
+REST_AUTH = {
+    'USE_JWT': True,
+    'SESSION_LOGIN': False, # API 서버는 상태를 저장하지 않는(stateless) JWT 방식을 따름
+    'JWT_AUTH_HTTPONLY': True, # Refresh Token을 HttpOnly 쿠키에 저장하여 XSS 공격 방어
+    'JWT_AUTH_COOKIE': 'my-app-auth', # Access Token을 저장할 쿠키 이름
+    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token', # Refresh Token을 저장할 쿠키 이름
+    'JWT_AUTH_SAMESITE': 'Lax',
+}
+
+# --- djangorestframework-simplejwt 설정 ---
+SIMPLE_JWT = {
+    # Access Token 유효 기간 설정 (예: 1시간)
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    # Refresh Token 유효 기간 설정 (예: 14일)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
+    
+    # Refresh Token 재발급(rotation) 및 블랙리스트 설정 (보안 강화)
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    
+    # 토큰 암호화 알고리즘 및 서명 키 설정
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    
+    # 토큰 헤더 형식 정의
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    
+    # User 모델과의 관계 설정
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    # 토큰 클래스 지정
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
+
+
 # CORS settings (add origins as needed, e.g., for frontend)
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # Example for local dev frontend
     'https://githubaquarium.store',
 ]
+CORS_ALLOW_CREDENTIALS = True 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
