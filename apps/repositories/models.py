@@ -1,10 +1,13 @@
 # apps/repositories/models.py
-
 from django.db import models
-from django.conf import settings
+from apps.users.models import Owner
 
 class Repository(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='repositories')
+    """
+    GitHub Repository의 핵심 정보를 저장하는 모델입니다.
+    """
+    # Repository의 소유자를 User가 아닌 Owner 모델과 연결합니다.
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, related_name='repositories')
     github_id = models.BigIntegerField(unique=True)
     name = models.CharField(max_length=255)
     full_name = models.CharField(max_length=512)
@@ -19,28 +22,40 @@ class Repository(models.Model):
     def __str__(self):
         return self.full_name
 
+class Contributor(models.Model):
+    """
+    특정 Repository의 기여자에 대한 정보를 저장하는 모델입니다.
+    GitHub API의 Contributor 정보를 기반으로 생성됩니다.
+    """
+    repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='contributors')
+    github_username = models.CharField(max_length=255)
+    contributions = models.IntegerField()
+    avatar_url = models.URLField(max_length=512, blank=True)
+
+    class Meta:
+        # 하나의 Repository 내에서 github_username은 고유해야 합니다.
+        unique_together = ('repository', 'github_username')
+
+    def __str__(self):
+        return f"{self.github_username} in {self.repository.name}"
+
 class Commit(models.Model):
+    """
+    특정 Repository에 속한 개별 커밋 정보를 저장하는 모델입니다.
+    """
     repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='commits')
     sha = models.CharField(max_length=40, unique=True)
+    
+    # GitHub API를 통해 식별된 Contributor와 연결합니다.
+    # 매핑 실패 시(GitHub 계정과 연결되지 않은 커밋) null이 될 수 있습니다.
+    author = models.ForeignKey(Contributor, on_delete=models.SET_NULL, null=True, blank=True, related_name='commits')
+    
+    # Git에 기록된 원본 작성자 정보를 별도로 저장합니다.
     author_name = models.CharField(max_length=255)
     author_email = models.EmailField()
+    
     message = models.TextField()
     committed_at = models.DateTimeField()
 
     def __str__(self):
-        return self.sha[:7]
-
-class Contributor(models.Model):
-    repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='contributors')
-    github_username = models.CharField(max_length=255)
-    contributions = models.IntegerField()
-    avatar_url = models.URLField(max_length=512)
-
-    class Meta:
-        unique_together = ('repository', 'github_username')
-
-    def __str__(self):
-        return self.github_username
-
-# Stargazer 모델은 필요 시 추가할 수 있으나,
-# 여기서는 stargazers_count만 Repository 모델에 저장하는 것으로 간소화했습니다.
+        return f"{self.sha[:7]} - {self.repository.name}"
