@@ -1,19 +1,10 @@
 # apps/users/adapter.py
 
-from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.contrib.auth import get_user_model
 import requests
 
 User = get_user_model()
-
-class CustomAccountAdapter(DefaultAccountAdapter):
-    def is_open_for_signup(self, request):
-        """
-        로컬(이메일/비밀번호) 회원가입을 비활성화합니다.
-        """
-        return False
-
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def save_user(self, request, sociallogin, form=None):
