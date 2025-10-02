@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
 
+    # drf-yasg
+    'drf_yasg',
+
     # CORS
     'corsheaders',
 
