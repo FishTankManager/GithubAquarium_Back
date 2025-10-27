@@ -17,6 +17,7 @@ class Repository(models.Model):
     updated_at = models.DateTimeField()
     last_synced_at = models.DateTimeField(auto_now=True)
 
+    # Repository의 소유자가 우리 서비스에 등록된 User인 경우
     owner = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,  # 소유 유저가 탈퇴해도 레포 정보는 유지
