@@ -1,7 +1,7 @@
 # GithubAquarium/urls.py
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from .views import GitHubLogin
 
 from dj_rest_auth.views import LogoutView, UserDetailsView
@@ -42,6 +42,6 @@ urlpatterns = [
     path('dj-rest-auth/token/refresh/', get_refresh_view().as_view(), name='token_refresh'),
 
     # 3. 로컬 앱 API URL
-    path('repositories/', include('apps.repositories.urls')),
+    # path('repositories/', include('apps.repositories.urls')),
     # path('users/', include('apps.users.urls')),
 ]
