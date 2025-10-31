@@ -7,5 +7,5 @@ class ManagerConfig(AppConfig):
     label = "manager"
     verbose_name = "Manager (운영진)" # 어드민 사이드바
     
-    def ready(self):
-        from . import signals 
+    #def ready(self):
+        #from . import signals 
