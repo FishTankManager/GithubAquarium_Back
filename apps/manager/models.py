@@ -7,6 +7,11 @@ class Rarity(models.TextChoices):
     EPIC = "EPIC", "Epic"
     LEGENDARY = "LEGENDARY", "Legendary"
 
+class Maturity(models.TextChoices):
+    """물고기 성장 단계"""
+    HATCHLING = "HATCHLING", "Hatchling (새끼)"
+    JUVENILE = "JUVENILE", "Juvenile (유어)"
+    ADULT = "ADULT", "Adult (성체)"
 
 class SvgAsset(models.Model):
     """
@@ -27,6 +32,13 @@ class SvgAsset(models.Model):
         max_length=16,
         choices=Rarity.choices,
         default=Rarity.COMMON,
+    )
+    maturity = models.CharField(
+        max_length=12,
+        choices=Maturity.choices,
+        null=True,
+        blank=True,
+        help_text="물고기(FISH)인 경우에만 선택합니다.",
     )
     approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

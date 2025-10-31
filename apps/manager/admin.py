@@ -6,7 +6,7 @@ from .models import SvgAsset, FishSpecies, BackgroundStyle, ShopItem
 
 @admin.register(SvgAsset)
 class SvgAssetAdmin(admin.ModelAdmin):
-    list_display = ("name", "asset_type", "rarity", "approved", "size", "updated_at")
+    list_display = ("name", "asset_type","maturity", "rarity", "approved", "size", "updated_at")
     list_filter = ("asset_type", "rarity", "approved")
     search_fields = ("name",)
     actions = ("approve_assets", "revoke_approval")
@@ -27,7 +27,7 @@ class SvgAssetAdmin(admin.ModelAdmin):
 
 @admin.register(FishSpecies)
 class FishSpeciesAdmin(admin.ModelAdmin):
-    list_display = ("name", "rarity", "active","spawn_weight", "asset_link")
+    list_display = ("name", "rarity", "active","spawn_weight", "maturity", "asset_link")
     list_filter = ("rarity", "active")
     search_fields = ("name",)
     list_editable = ("spawn_weight",) #등장 확률
@@ -38,7 +38,13 @@ class FishSpeciesAdmin(admin.ModelAdmin):
             obj.asset_id,
             obj.asset.name,
         )
-
+    
+    def maturity(self, obj):
+        """연결된 SVG의 성숙도 보여주기"""
+        if obj.asset and obj.asset.maturity:
+            return obj.asset.get_maturity_display()
+        return "-"
+    maturity.short_description = "성숙도"
 
 @admin.register(BackgroundStyle)
 class BackgroundStyleAdmin(admin.ModelAdmin):
