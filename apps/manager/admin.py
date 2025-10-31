@@ -1,7 +1,7 @@
 # apps/manager/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import SvgAsset, FishSpecies, BackgroundStyle
+from .models import SvgAsset, FishSpecies, BackgroundStyle, ShopItem
 
 
 @admin.register(SvgAsset)
@@ -51,3 +51,19 @@ class BackgroundStyleAdmin(admin.ModelAdmin):
             obj.asset_id,
             obj.asset.name,
         )
+    
+@admin.register(ShopItem)
+class ShopItemAdmin(admin.ModelAdmin):
+    list_display = ("name", "item_type", "price", "active", "preview_svg")
+    list_editable = ("price", "active")
+    list_filter = ("item_type", "active")
+    search_fields = ("name",)
+
+    def preview_svg(self, obj):
+        if obj.asset and obj.asset.svg:
+            return format_html(
+                '<img src="{}" width="40" height="40" style="object-fit:contain;">',
+                obj.asset.svg.url,
+            )
+        return "-"
+    preview_svg.short_description = "미리보기"

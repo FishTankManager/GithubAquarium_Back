@@ -15,6 +15,7 @@ class SvgAsset(models.Model):
     ASSET_TYPES = (
         ("FISH", "Fish"),
         ("BG", "Background"),
+        ("ITEM", "Shop Item"),
     )
 
     name = models.CharField(max_length=100, unique=True)
@@ -38,7 +39,7 @@ class SvgAsset(models.Model):
     def __str__(self):
         return f"{self.asset_type}:{self.name}"
 
-
+#도감
 class FishSpecies(models.Model):
     """
     도감에서 보여줄 물고기 종류
@@ -56,6 +57,8 @@ class FishSpecies(models.Model):
         default=Rarity.COMMON,
     )
     active = models.BooleanField(default=True)
+    spawn_weight = models.PositiveIntegerField(default=100, help_text="가중치가 높을수록 자주 나옵니다.")
+
 
     class Meta:
         verbose_name = "물고기 종류"
@@ -84,3 +87,37 @@ class BackgroundStyle(models.Model):
 
     def __str__(self):
         return self.name
+
+
+##상점
+class ShopItem(models.Model):
+    """
+    상점에서 판매할 아이템
+    - 배경(BG) 또는 뽑기권(TICKET)
+    - 대표 SVG 이미지 연결 가능
+    """
+    ITEM_TYPES = (
+        ("BG", "Background"),
+        ("TICKET", "Draw Ticket"),
+    )
+
+    name = models.CharField(max_length=100, unique=True)
+    item_type = models.CharField(max_length=10, choices=ITEM_TYPES)
+    price = models.PositiveIntegerField()
+    asset = models.ForeignKey(
+        SvgAsset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={"approved": True},
+        related_name="shop_items",
+        help_text="상품의 대표 이미지로 사용할 SVG 선택",
+    )
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "상점 아이템"
+        verbose_name_plural = "상점 아이템"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_item_type_display()})"
