@@ -27,9 +27,10 @@ class SvgAssetAdmin(admin.ModelAdmin):
 
 @admin.register(FishSpecies)
 class FishSpeciesAdmin(admin.ModelAdmin):
-    list_display = ("name", "rarity", "active", "asset_link")
+    list_display = ("name", "rarity", "active","spawn_weight", "asset_link")
     list_filter = ("rarity", "active")
     search_fields = ("name",)
+    list_editable = ("spawn_weight",) #등장 확률
 
     def asset_link(self, obj):
         return format_html(
