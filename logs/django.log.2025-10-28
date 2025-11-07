@@ -1,0 +1,17 @@
+INFO 2025-10-28 22:41:36,282 autoreload 21440 123247993231168 Watching for file changes with StatReloader
+INFO 2025-10-28 22:42:05,938 autoreload 21722 124222415832896 Watching for file changes with StatReloader
+WARNING 2025-10-28 22:42:10,107 log 21722 124222367844032 Not Found: /
+WARNING 2025-10-28 22:42:10,108 basehttp 21722 124222367844032 "GET / HTTP/1.1" 404 3633
+WARNING 2025-10-28 22:42:10,139 log 21722 124222367844032 Not Found: /favicon.ico
+WARNING 2025-10-28 22:42:10,139 basehttp 21722 124222367844032 "GET /favicon.ico HTTP/1.1" 404 3684
+INFO 2025-10-28 22:42:14,143 basehttp 21722 124222367844032 "GET /swagger HTTP/1.1" 301 0
+INFO 2025-10-28 22:42:14,149 basehttp 21722 124222359451328 "GET /swagger/ HTTP/1.1" 200 2221
+INFO 2025-10-28 22:42:14,175 basehttp 21722 124222359451328 "GET /static/drf-yasg/style.css HTTP/1.1" 200 1047
+INFO 2025-10-28 22:42:14,177 basehttp 21722 124221996922560 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 200 2093
+INFO 2025-10-28 22:42:14,182 basehttp 21722 124221988529856 "GET /static/drf-yasg/immutable.min.js HTTP/1.1" 200 56904
+INFO 2025-10-28 22:42:14,182 basehttp 21722 124221996922560 "GET /static/drf-yasg/swagger-ui-init.js HTTP/1.1" 200 15480
+INFO 2025-10-28 22:42:14,184 basehttp 21722 124222367844032 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 145206
+INFO 2025-10-28 22:42:14,185 basehttp 21722 124222341617344 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 322863
+INFO 2025-10-28 22:42:14,188 basehttp 21722 124222351058624 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1046583
+INFO 2025-10-28 22:42:14,294 basehttp 21722 124221996922560 "GET /swagger/?format=openapi HTTP/1.1" 200 5015
+INFO 2025-10-28 22:42:14,295 basehttp 21722 124222359451328 "GET /static/drf-yasg/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628

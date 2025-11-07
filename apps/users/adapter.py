@@ -1,24 +1,35 @@
 # apps/users/adapter.py
+"""
+Custom adapter for django-allauth to handle post-login logic.
+"""
 import logging
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from github import Github, GithubException
 from apps.repositories.models import Repository, Contributor, Commit
-from apps.repositories.serializers import RepositorySerializer, ContributorSerializer, CommitSerializer
 
+# Standard instance of a logger
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+    """
+    Overrides the default social account adapter to sync GitHub data upon user login.
+    """
     
     @transaction.atomic
     def save_user(self, request, sociallogin, form=None):
         """
-        소셜 로그인 시 호출되며, User 모델에 추가 정보를 저장하고,
-        PyGithub 라이브러리를 사용하여 관련 데이터를 동기화합니다.
-        모든 과정은 원자적 트랜잭션으로 처리됩니다.
+        This method is called when a user successfully logs in via a social account.
+        
+        It performs the following actions in a single database transaction:
+        1. Calls the parent `save_user` method to create/update the user.
+        2. Retrieves the GitHub access token.
+        3. Updates the local User model with additional data from the GitHub API.
+        4. Initiates the synchronization of the user's repositories, contributors, and commits.
         """
+        # Create the user using the default adapter's logic first.
         user = super().save_user(request, sociallogin, form)
         
         try:
@@ -29,134 +40,144 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 logger.warning("GitHub access token not found for user %s.", user.username)
                 return user
 
+            # Initialize PyGithub with the user's access token
             g = Github(access_token)
             github_user = g.get_user()
 
-            # 1. User 모델 업데이트
+            # 1. Update the local User model with GitHub data
             user.github_id = github_user.id
             user.github_username = github_user.login
             user.avatar_url = github_user.avatar_url
             user.save()
 
-            # 2. Repository, Contributor, Commit 정보 동기화
-            self.sync_repositories(user, github_user)
+            # 2. Sync repositories and their related data
+            self.sync_all_user_data(user, github_user)
 
         except Exception as e:
+            # If any part of the sync fails, the transaction will be rolled back.
             logger.error("Error during GitHub data synchronization for user %s: %s", user.username, e, exc_info=True)
-            # 트랜잭션이 롤백되도록 예외를 다시 발생시킬 수 있습니다.
-            # 또는 여기서 처리를 중단하고 사용자에게 오류를 알릴 수 있습니다.
+            # Re-raise the exception to ensure the transaction is rolled back
+            raise
             
         return user
 
-    def sync_repositories(self, user, github_user):
+    def sync_all_user_data(self, user, github_user):
         """
-        사용자의 모든 저장소 정보를 가져와 DB에 업데이트합니다.
+        Orchestrates the synchronization of all GitHub data for a given user.
         """
         logger.info("Starting repository sync for user: %s", user.username)
         
+        # Fetch only repositories owned by the user, sorted by last update
         repos = github_user.get_repos(affiliation='owner', sort='updated', direction='desc')
         
         for repo in repos:
             try:
+                # Use a nested transaction for each repository to isolate failures
                 with transaction.atomic():
-                    repo_data = {
-                        'github_id': repo.id,
-                        'name': repo.name,
-                        'full_name': repo.full_name,
-                        'description': repo.description,
-                        'html_url': repo.html_url,
-                        'stargazers_count': repo.stargazers_count,
-                        'language': repo.language,
-                        'created_at': repo.created_at,
-                        'updated_at': repo.updated_at,
-                        'owner': user.id,
-                    }
-                    
-                    instance = Repository.objects.filter(github_id=repo.id).first()
-                    serializer = RepositorySerializer(instance=instance, data=repo_data)
-                    
-                    if serializer.is_valid(raise_exception=True):
-                        repository = serializer.save()
-                        
-                        if not instance:
-                            logger.info("Created new repository: %s", repo.full_name)
-                        else:
-                            logger.info("Updated repository: %s", repo.full_name)
-                        
-                        self.sync_contributors(repository, repo)
-                        self.sync_commits(repository, repo)
+                    repository_model = self.sync_repository(repo, user)
+                    self.sync_contributors(repository_model, repo)
+                    self.sync_commits(repository_model, repo)
             except Exception as e:
+                # Log errors per repository but don't stop the entire sync process
                 logger.error("Failed to sync repository %s for user %s: %s", repo.full_name, user.username, e, exc_info=True)
 
         logger.info("Finished repository sync for user: %s", user.username)
 
+    def sync_repository(self, repo_obj, owner_user):
+        """
+        Updates or creates a single Repository record in the database.
+        This is more efficient than using serializers for background tasks.
+        """
+        repository, created = Repository.objects.update_or_create(
+            github_id=repo_obj.id,
+            defaults={
+                'name': repo_obj.name,
+                'full_name': repo_obj.full_name,
+                'description': repo_obj.description,
+                'html_url': repo_obj.html_url,
+                'stargazers_count': repo_obj.stargazers_count,
+                'language': repo_obj.language,
+                'created_at': repo_obj.created_at,
+                'updated_at': repo_obj.updated_at,
+                'owner': owner_user,
+            }
+        )
+        log_msg = "Created new" if created else "Updated"
+        logger.info("  %s repository: %s", log_msg, repo_obj.full_name)
+        return repository
+
     def sync_contributors(self, repository_model, repo_obj):
         """
-        저장소의 Contributor 정보를 가져와 DB에 업데이트합니다.
+        Updates or creates Contributor records for a repository.
+        Optimized to avoid N+1 query problems.
         """
-        logger.info("  Syncing contributors for %s", repo_obj.full_name)
+        logger.info("    Syncing contributors for %s", repo_obj.full_name)
         try:
-            with transaction.atomic():
-                contributors = repo_obj.get_contributors()
-                for contributor in contributors:
-                    user_instance = User.objects.filter(github_id=contributor.id).first()
-                    
-                    if user_instance:
-                        contributor_data = {
-                            'repository': repository_model.id,
-                            'user': user_instance.id,
-                            'github_username': contributor.login,
-                            'contributions_count': contributor.contributions,
-                            'avatar_url': contributor.avatar_url,
-                        }
-                        
-                        instance = Contributor.objects.filter(repository=repository_model, user=user_instance).first()
-                        serializer = ContributorSerializer(instance=instance, data=contributor_data)
-                        
-                        if serializer.is_valid(raise_exception=True):
-                            serializer.save()
+            contributors = list(repo_obj.get_contributors())
+            if not contributors:
+                return
 
-                logger.info("  Successfully synced contributors for %s", repo_obj.full_name)
+            # --- N+1 Query Optimization ---
+            # 1. Get all contributor GitHub IDs.
+            contributor_github_ids = [c.id for c in contributors]
+            # 2. Fetch all existing users in a single query.
+            existing_users = User.objects.filter(github_id__in=contributor_github_ids).values('id', 'github_id')
+            # 3. Create a mapping from github_id to user_id for quick lookup.
+            user_map = {user['github_id']: user['id'] for user in existing_users}
+
+            for contributor in contributors:
+                # Only sync contributors who are also users of our application
+                if contributor.id in user_map:
+                    user_id = user_map[contributor.id]
+                    Contributor.objects.update_or_create(
+                        repository=repository_model,
+                        user_id=user_id,
+                        defaults={
+                            'contributions_count': contributor.contributions,
+                        }
+                    )
+            logger.info("    Successfully synced %d contributors for %s", len(contributors), repo_obj.full_name)
         except GithubException as e:
-            logger.warning("  Could not get contributors for %s. It might be empty. Error: %s", repo_obj.full_name, e)
+            logger.warning("    Could not get contributors for %s. It might be empty. Error: %s", repo_obj.full_name, e)
         except Exception as e:
-            logger.error("  An unexpected error occurred while syncing contributors for %s: %s", repo_obj.full_name, e, exc_info=True)
+            logger.error("    An unexpected error occurred while syncing contributors for %s: %s", repo_obj.full_name, e, exc_info=True)
 
     def sync_commits(self, repository_model, repo_obj):
         """
-        저장소의 Commit 정보를 가져와 DB에 업데이트합니다. (최근 100개)
+        Updates or creates Commit records for a repository.
+        Fetches the most recent 100 commits to avoid excessive API calls.
+        Optimized to avoid N+1 query problems.
         """
-        logger.info("  Syncing commits for %s", repo_obj.full_name)
+        logger.info("    Syncing commits for %s", repo_obj.full_name)
         try:
-            with transaction.atomic():
-                commits = repo_obj.get_commits()
-                
-                for commit in commits:
-                    author_instance = None
-                    if commit.author:
-                        author_instance = User.objects.filter(github_id=commit.author.id).first()
+            # Limit to the most recent 100 commits to avoid API rate limiting issues
+            commits = repo_obj.get_commits()[:100]
+            if not commits:
+                return
 
-                    author_name = commit.commit.author.name if commit.commit and commit.commit.author else "Unknown"
-                    author_email = commit.commit.author.email if commit.commit and commit.commit.author else "unknown@example.com"
+            # --- N+1 Query Optimization ---
+            author_github_ids = {c.author.id for c in commits if c.author}
+            existing_users = User.objects.filter(github_id__in=author_github_ids).values('id', 'github_id')
+            user_map = {user['github_id']: user['id'] for user in existing_users}
 
-                    commit_data = {
-                        'sha': commit.sha,
-                        'repository': repository_model.id,
-                        'author': author_instance.id if author_instance else None,
+            for commit in commits:
+                author_id = None
+                if commit.author and commit.author.id in user_map:
+                    author_id = user_map[commit.author.id]
+
+                Commit.objects.update_or_create(
+                    sha=commit.sha,
+                    defaults={
+                        'repository': repository_model,
+                        'author_id': author_id,
                         'message': commit.commit.message,
                         'committed_at': commit.commit.author.date,
-                        'author_name': author_name,
-                        'author_email': author_email,
+                        'author_name': commit.commit.author.name,
+                        'author_email': commit.commit.author.email,
                     }
-
-                    instance = Commit.objects.filter(sha=commit.sha).first()
-                    serializer = CommitSerializer(instance=instance, data=commit_data)
-
-                    if serializer.is_valid(raise_exception=True):
-                        serializer.save()
-
-                logger.info("  Successfully synced commits for %s", repo_obj.full_name)
+                )
+            logger.info("    Successfully synced commits for %s", repo_obj.full_name)
         except GithubException as e:
-            logger.warning("  Could not get commits for %s. It might be empty. Error: %s", repo_obj.full_name, e)
+            logger.warning("    Could not get commits for %s. It might be empty. Error: %s", repo_obj.full_name, e)
         except Exception as e:
-            logger.error("  An unexpected error occurred while syncing commits for %s: %s", repo_obj.full_name, e, exc_info=True)
+            logger.error("    An unexpected error occurred while syncing commits for %s: %s", repo_obj.full_name, e, exc_info=True)

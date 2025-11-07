@@ -4,12 +4,23 @@ from django.db import models
 
 class User(AbstractUser):
     """
-    Django의 기본 User 모델을 확장하여 GitHub 계정 정보를 저장합니다.
-    이 시스템에 로그인하는 사용자를 나타냅니다.
+    Custom User model that extends Django's AbstractUser.
+    
+    This model represents a user of the application and includes additional
+    fields to store their GitHub account information, as authentication is
+    handled via GitHub OAuth.
     """
+    # GitHub's unique numeric ID for the user.
     github_id = models.BigIntegerField(unique=True, null=True, blank=True)
+    
+    # The user's login name on GitHub (e.g., "octocat").
     github_username = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    
+    # URL for the user's GitHub profile picture.
     avatar_url = models.URLField(max_length=512, blank=True)
 
     def __str__(self):
+        """
+        Returns the username as the string representation of the User object.
+        """
         return self.username

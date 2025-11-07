@@ -5,8 +5,16 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv run python3 manage.py graph_models -a -o erd.png
 uv run ruff check . --fix
 uv run python3 manage.py show_urls
-find . \( -path "./venv" -o -path "./.venv" -o -path "./__pycache__" -o -path "./.git" \) -prune -o -name "*.py" -a -not -name "__init__.py" -exec sh -c 'echo "--- File: {} ---"; echo; cat {}; echo -e "\n\n";' \; > combined_code.txt
+git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > all.txt
 
-# TODO
-celery worker 추가
-docker로 db 연결 추가
+.env 예시 format
+DEBUG=''
+SECRET_KEY=''
+
+GITHUB_APP_ID=''
+GITHUB_CLIENT_ID=''
+GITHUB_CLIENT_SECRET=''
+GITHUB_PRIVATE_KEY_B64=""
+
+GITHUB_WEBHOOK_SECRET=''
+GITHUB_CALLBACK_URL=''
