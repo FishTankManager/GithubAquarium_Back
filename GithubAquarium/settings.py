@@ -73,6 +73,8 @@ INSTALLED_APPS = [
     # Your custom apps
     'apps.users',
     'apps.repositories',
+    'apps.items',
+    'apps.aquatics',
 
     # Development tools
     'django_extensions',
