@@ -1,13 +1,10 @@
 # GithubAquarium/webhook_views.py
-"""
-Handles incoming webhooks from GitHub to sync repository and user data.
-"""
-
 import hashlib
 import hmac
 from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
+from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -92,6 +89,7 @@ class GitHubWebhookView(APIView):
         operation_id="handle_github_webhook",
         tags=["Webhooks"],
     )
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         # 1. Verify the request signature for security
         signature_header = request.headers.get('X-Hub-Signature-256')

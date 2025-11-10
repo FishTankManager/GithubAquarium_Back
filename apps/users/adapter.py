@@ -150,8 +150,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         """
         logger.info("    Syncing commits for %s", repo_obj.full_name)
         try:
-            # Limit to the most recent 100 commits to avoid API rate limiting issues
-            commits = repo_obj.get_commits()[:100]
+            commits = repo_obj.get_commits() # Fetch all commits
             if not commits:
                 return
 
