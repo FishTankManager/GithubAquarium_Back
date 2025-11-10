@@ -2,7 +2,58 @@
 from django.db import models
 from django.conf import settings
 from apps.repositories.models import Repository
-from apps.items.models import FishSpecies, UserBackground
+from apps.items.models import Background, FishSpecies
+
+
+class UserFish(models.Model):
+    """
+    Links a User to a FishSpecies they have unlocked.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='owned_fishes'
+    )
+    fish_species = models.ForeignKey(
+        FishSpecies,
+        on_delete=models.CASCADE
+    )
+    unlocked_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Timestamp when the user unlocked this fish species."
+    )
+
+    class Meta:
+        unique_together = ('user', 'fish_species')
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.fish_species.name}"
+
+
+class UserBackground(models.Model):
+    """
+    Links a User to a Background they have unlocked.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='owned_backgrounds'
+    )
+    background = models.ForeignKey(
+        Background, 
+        on_delete=models.CASCADE
+    )
+    unlocked_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Timestamp when the user unlocked this background."
+    )
+
+    class Meta:
+        unique_together = ('user', 'background')
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.background.name}"
+    
 
 class Aquarium(models.Model):
     """
@@ -72,7 +123,7 @@ class Fishtank(models.Model):
     def __str__(self):
         return f"Fishtank for {self.repository.name}"
 
-class FishtankContributor(models.Model):
+class FishtankFish(models.Model):
     """
     Represents a contributor's assigned fish within a Fishtank.
     An instance is uniquely identified by the combination of 'fishtank' and 'contributor'.
@@ -124,3 +175,4 @@ class FishtankSetting(models.Model):
 
     def __str__(self):
         return f"Setting by {self.contributor.username} for {self.fishtank}"
+    

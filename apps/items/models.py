@@ -1,36 +1,36 @@
-# items/models.py
+# apps/items/models.py
 from django.db import models
-from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class FishSpecies(models.Model):
     """
     Master data for all available fish species in the system (the "Fishdex").
     """
     name = models.CharField(
-        max_length=100, 
+        max_length=100,
         unique=True,
         help_text="The display name of the fish species."
     )
-    species_code = models.CharField(
-        max_length=10, 
-        unique=True, 
+    group_code = models.CharField(
+        max_length=10,
         db_index=True,
-        help_text="A short, unique code for programmatic access, e.g., 'C-KRAKEN'."
+        help_text="A code for the evolution group, e.g., 'C-KRAKEN'.",
+        default="NONE"
     )
-    evolves_from = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='evolves_into',
-        help_text="The species from which this one evolves."
+    level = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        help_text="The evolution level of the fish, from 0 to 5."
     )
     svg_template = models.TextField(
         help_text="The SVG source code template for this fish."
     )
 
+    class Meta:
+        unique_together = ('group_code', 'level')
+
     def __str__(self):
-        return f"[{self.species_code}] {self.name}"
+        return f"[{self.group_code}-Lvl:{self.level}] {self.name}"
 
 class Background(models.Model):
     """
@@ -53,27 +53,3 @@ class Background(models.Model):
 
     def __str__(self):
         return self.name
-
-class UserBackground(models.Model):
-    """
-    Links a User to a Background they have unlocked.
-    """
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='owned_backgrounds'
-    )
-    background = models.ForeignKey(
-        Background, 
-        on_delete=models.CASCADE
-    )
-    unlocked_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp when the user unlocked this background."
-    )
-
-    class Meta:
-        unique_together = ('user', 'background')
-
-    def __str__(self):
-        return f"{self.user.username}'s {self.background.name}"

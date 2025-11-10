@@ -16,6 +16,8 @@ from dateutil.parser import parse as parse_datetime
 from apps.repositories.models import Repository, Commit
 from apps.users.models import User
 
+from drf_yasg.utils import swagger_auto_schema
+
 class GitHubWebhookView(APIView):
     """
     Receives and processes webhook events from GitHub.
@@ -75,10 +77,22 @@ class GitHubWebhookView(APIView):
         )
         return repository
 
+    @swagger_auto_schema(
+        summary="GitHub Webhook Handler",
+        description="""
+        Handles incoming webhook events from GitHub to keep the application's database in sync.
+
+        ### Supported Events:
+        - **star**: Triggered when a repository is starred or unstarred. Updates the `stargazers_count`.
+        - **push**: Triggered on a push to a repository. Updates repository details and records new commits.
+        - **meta**: Triggered for webhook administrative events (e.g., deletion).
+
+        The request body should be the raw JSON payload from the GitHub webhook, and the `X-Hub-Signature-256` header must be present for verification.
+        """,
+        operation_id="handle_github_webhook",
+        tags=["Webhooks"],
+    )
     def post(self, request, *args, **kwargs):
-        """
-        Handles incoming POST requests from GitHub webhooks.
-        """
         # 1. Verify the request signature for security
         signature_header = request.headers.get('X-Hub-Signature-256')
         if not signature_header:
