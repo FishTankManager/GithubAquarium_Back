@@ -22,15 +22,23 @@ class FishSpecies(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(5)],
         help_text="The evolution level of the fish, from 0 to 5."
     )
+    required_commits = models.PositiveIntegerField(
+        default=0,
+        db_index=True,  # Add index for faster lookups based on commit counts.
+        help_text="The total number of commits required to reach this evolution level."
+    )
+    
     svg_template = models.TextField(
         help_text="The SVG source code template for this fish."
     )
 
     class Meta:
-        unique_together = ('group_code', 'level')
+        unique_together = [
+            ('group_code', 'level'),
+        ]
 
     def __str__(self):
-        return f"[{self.group_code}-Lvl:{self.level}] {self.name}"
+        return f"[{self.group_code}-Lvl:{self.level}] {self.name} ({self.required_commits}+ commits)"
 
 class Background(models.Model):
     """

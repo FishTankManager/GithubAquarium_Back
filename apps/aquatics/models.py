@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from apps.repositories.models import Repository
 from apps.items.models import Background, FishSpecies
+from apps.repositories.models import Contributor
 
 
 class UserFish(models.Model):
@@ -126,28 +127,25 @@ class Fishtank(models.Model):
 class FishtankFish(models.Model):
     """
     Represents a contributor's assigned fish within a Fishtank.
-    An instance is uniquely identified by the combination of 'fishtank' and 'contributor'.
+    This model is now directly linked to a Contributor record,
+    which holds the contribution data (e.g., commit count).
     """
-    fishtank = models.ForeignKey(
-        Fishtank, 
-        on_delete=models.CASCADE, 
-        related_name='contributors'
+    contributor = models.OneToOneField(
+        Contributor,
+        on_delete=models.CASCADE,
+        related_name='fishtank_fish'
     )
-    contributor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-    )
+    
     fish_species = models.ForeignKey(
         FishSpecies, 
         on_delete=models.PROTECT,
         help_text="The species assigned to this contributor."
     )
 
-    class Meta:
-        unique_together = ('fishtank', 'contributor')
-
     def __str__(self):
-        return f"{self.contributor.username} in {self.fishtank}"
+        # Now we can create a more descriptive string representation.
+        return f"Fish for {self.contributor.user.username} in {self.contributor.repository.name}'s Fishtank"
+
 
 class FishtankSetting(models.Model):
     """

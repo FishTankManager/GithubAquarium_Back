@@ -180,5 +180,6 @@ cython_debug/
 .vscode/
 *.code-workspace
 logs/
+all.txt
 
 # End of My

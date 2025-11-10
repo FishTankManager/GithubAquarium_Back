@@ -151,6 +151,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         logger.info("    Syncing commits for %s", repo_obj.full_name)
         try:
             commits = repo_obj.get_commits() # Fetch all commits
+
+            # Update the repository's total commit count
+            repository_model.commit_count = commits.totalCount
+            repository_model.save(update_fields=['commit_count']) # Explicitly save the new count
+
             if not commits:
                 return
 

@@ -1,6 +1,7 @@
 # GithubAquarium/webhook_views.py
 import hashlib
 import hmac
+import logging # Import the logging module
 from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
@@ -14,6 +15,9 @@ from apps.repositories.models import Repository, Commit
 from apps.users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
+
+# Get an instance of a logger for this module
+logger = logging.getLogger(__name__)
 
 class GitHubWebhookView(APIView):
     """
@@ -120,7 +124,8 @@ class GitHubWebhookView(APIView):
             repository.stargazers_count = repo_data['stargazers_count']
             repository.save()
 
-            print(f"Handled star event for {repository.full_name}")
+            # Replaced print() with logger.info()
+            logger.info("Handled 'star' event for repository: %s", repository.full_name)
 
         elif event_type == 'push':
             # Handle push events with new commits
@@ -143,21 +148,21 @@ class GitHubWebhookView(APIView):
 
             # Process each commit in the push
             
-            # 1. 루프 밖에서 모든 커밋 작성자의 username을 수집합니다.
+            # 1. Collect all author usernames from the commits payload outside the loop.
             author_usernames = {
                 commit_data['author'].get('username')
                 for commit_data in payload['commits']
                 if commit_data['author'].get('username')
             }
 
-            # 2. 단 한 번의 쿼리로 모든 관련 사용자를 가져옵니다.
+            # 2. Fetch all relevant users in a single database query.
             users = User.objects.filter(github_username__in=author_usernames)
             
-            # 3. username을 키로 하는 딕셔너리(맵)를 만들어 빠르게 사용자를 찾을 수 있도록 합니다.
+            # 3. Create a dictionary (map) for quick user lookup by username.
             user_map = {user.github_username: user for user in users}
 
             for commit_data in payload['commits']:
-                # 4. DB 쿼리 대신 맵에서 사용자를 조회합니다.
+                # 4. Look up the user from the map instead of hitting the database.
                 commit_author = user_map.get(commit_data['author'].get('username'))
 
                 Commit.objects.get_or_create(
@@ -171,12 +176,12 @@ class GitHubWebhookView(APIView):
                         'author_email': commit_data['author']['email'],
                     }
                 )
-            print(f"Handled push event for {repository.full_name}")
+            logger.info("Handled 'push' event for repository: %s", repository.full_name)
 
         elif event_type == 'meta':
             # Handle webhook meta-events (e.g., when a webhook is deleted)
-            print("Received meta event")
+            logger.info("Received 'meta' event from GitHub webhook.")
         else:
-            print(f"Received unhandled event type: {event_type}")
+            logger.warning("Received unhandled GitHub webhook event type: %s", event_type)
 
         return Response(status=status.HTTP_200_OK)

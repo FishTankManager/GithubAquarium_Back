@@ -27,6 +27,12 @@ class Repository(models.Model):
     # The primary programming language of the repository.
     language = models.CharField(max_length=100, null=True, blank=True)
     
+    # The total number of commits in this repository.
+    commit_count = models.PositiveIntegerField(
+        default=0,
+        help_text="The total number of commits in this repository."
+    )
+    
     # Timestamps from GitHub.
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
