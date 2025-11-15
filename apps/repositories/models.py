@@ -72,7 +72,7 @@ class Contributor(models.Model):
 
     # --- Denormalized data from GitHub for performance ---
     # Total number of contributions to this repository.
-    contributions_count = models.IntegerField()
+    commit_count = models.IntegerField()
 
     class Meta:
         # Ensures that a user can only be listed as a contributor to a repository once.

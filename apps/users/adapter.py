@@ -133,7 +133,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                         repository=repository_model,
                         user_id=user_id,
                         defaults={
-                            'contributions_count': contributor.contributions,
+                            'commit_count': contributor.contributions,
                         }
                     )
             logger.info("    Successfully synced %d contributors for %s", len(contributors), repo_obj.full_name)

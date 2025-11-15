@@ -1,4 +1,4 @@
-# aquartics/models.py
+# apps/aquatics/models.py
 from django.db import models
 from django.conf import settings
 from apps.repositories.models import Repository
@@ -6,14 +6,14 @@ from apps.items.models import Background, FishSpecies
 from apps.repositories.models import Contributor
 
 
-class UserFish(models.Model):
+class UnlockedFish(models.Model):
     """
-    Links a User to a FishSpecies they have unlocked.
+    Links a User to a FishSpecies they have unlocked (like a Fishdex).
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='owned_fishes'
+        related_name='owned_fishes' # Note: Consider changing to 'unlocked_fishes' later if needed
     )
     fish_species = models.ForeignKey(
         FishSpecies,
@@ -28,12 +28,12 @@ class UserFish(models.Model):
         unique_together = ('user', 'fish_species')
 
     def __str__(self):
-        return f"{self.user.username}'s {self.fish_species.name}"
+        return f"{self.user.username}'s unlocked {self.fish_species.name}"
 
 
-class UserBackground(models.Model):
+class OwnBackground(models.Model):
     """
-    Links a User to a Background they have unlocked.
+    Links a User to a Background they have unlocked and can use.
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -67,7 +67,7 @@ class Aquarium(models.Model):
         related_name='aquarium'
     )
     background = models.ForeignKey(
-        UserBackground, 
+        OwnBackground, 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
@@ -82,28 +82,6 @@ class Aquarium(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Aquarium"
 
-class AquariumFish(models.Model):
-    """
-    Represents a single fish within an Aquarium.
-    Each fish corresponds to a repository owned by the user.
-    """
-    aquarium = models.ForeignKey(
-        Aquarium, 
-        on_delete=models.CASCADE, 
-        related_name='fishes'
-    )
-    repository = models.OneToOneField(
-        Repository, 
-        on_delete=models.CASCADE
-    )
-    fish_species = models.ForeignKey(
-        FishSpecies, 
-        on_delete=models.PROTECT,
-        help_text="The species assigned to this repository-fish."
-    )
-
-    def __str__(self):
-        return f"Fish for {self.repository.name} in {self.aquarium}"
 
 class Fishtank(models.Model):
     """
@@ -124,26 +102,37 @@ class Fishtank(models.Model):
     def __str__(self):
         return f"Fishtank for {self.repository.name}"
 
-class FishtankFish(models.Model):
+class ContributionFish(models.Model):
     """
     Represents a contributor's assigned fish within a Fishtank.
-    This model is now directly linked to a Contributor record,
-    which holds the contribution data (e.g., commit count).
+    This fish can optionally be added to a user's personal Aquarium.
     """
     contributor = models.OneToOneField(
         Contributor,
         on_delete=models.CASCADE,
-        related_name='fishtank_fish'
+        related_name='contribution_fish'
     )
-    
     fish_species = models.ForeignKey(
         FishSpecies, 
         on_delete=models.PROTECT,
         help_text="The species assigned to this contributor."
     )
+    aquarium = models.ForeignKey(
+        Aquarium,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fishes',
+        help_text="The aquarium this fish has been added to."
+    )
+    is_visible = models.BooleanField(
+        default=True,
+        help_text="Determines whether this fish is visible in the fishtank."
+    )
 
     def __str__(self):
-        # Now we can create a more descriptive string representation.
+        if self.aquarium:
+            return f"Fish for {self.contributor.user.username} in {self.contributor.repository.name}'s Fishtank (in {self.aquarium})"
         return f"Fish for {self.contributor.user.username} in {self.contributor.repository.name}'s Fishtank"
 
 
@@ -161,7 +150,7 @@ class FishtankSetting(models.Model):
         on_delete=models.CASCADE
     )
     background = models.ForeignKey(
-        UserBackground, 
+        OwnBackground, 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
@@ -173,4 +162,3 @@ class FishtankSetting(models.Model):
 
     def __str__(self):
         return f"Setting by {self.contributor.username} for {self.fishtank}"
-    

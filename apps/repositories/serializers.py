@@ -25,7 +25,7 @@ class ContributorSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'repository',
-            'contributions_count',
+            'commit_count',
             'github_username',
             'avatar_url'
         ]
