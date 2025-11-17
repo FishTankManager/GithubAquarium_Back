@@ -179,7 +179,7 @@ cython_debug/
 # VS Code
 .vscode/
 *.code-workspace
-logs/
+/logs/
 all.txt
 
 # End of My
