@@ -1,4 +1,3 @@
-# apps/items/models.py
 from django.db import models
 
 class FishSpecies(models.Model):
