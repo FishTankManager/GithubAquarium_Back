@@ -28,18 +28,19 @@ schema_view = get_schema_view(
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
+   url='https://githubaquarium.store',
 )
 
 urlpatterns = [
     # --- API Docs ---
     # URLs for Swagger and ReDoc API documentation
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('api/swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     # --- Django Admin ---
     # URL for the Django admin interface
-    path('admin/', admin.site.urls),
+    path('api/admin/', admin.site.urls),
 
     # --- Authentication (dj-rest-auth) ---
     # URLs for handling user authentication and social login
