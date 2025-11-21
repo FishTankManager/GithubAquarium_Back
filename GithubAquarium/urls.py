@@ -59,4 +59,7 @@ urlpatterns = [
     path('api/repositories/', include('apps.repositories.urls')),
     path('api/users/', include('apps.users.urls')),
     path('api/aquatics/', include('apps.aquatics.urls')),
+    
+    # --- DRF Auth ---
+    path('api-auth/', include('rest_framework.urls')),
 ]

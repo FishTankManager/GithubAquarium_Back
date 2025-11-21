@@ -1,4 +1,5 @@
 from django.urls import path
+from .views import AquariumSVGView
 from .views_fishtank import (
     FishtankDetailView,
     FishtankSVGView,
@@ -13,4 +14,5 @@ urlpatterns = [
     path("fishtank/backgrounds/", FishtankBackgroundListView.as_view()),
     path("fishtank/<int:repo_id>/apply-background/", ApplyFishtankBackgroundView.as_view()),
     path("fishtank/<int:repo_id>/export/", FishtankExportView.as_view()),
+    path("svg/", AquariumSVGView.as_view(), name="aquarium-svg"),
 ]
