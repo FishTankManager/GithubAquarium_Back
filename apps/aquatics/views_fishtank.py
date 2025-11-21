@@ -8,7 +8,7 @@ from drf_yasg import openapi
 #fishtank views.py
 
 from apps.repositories.models import Repository
-from apps.aquatics.models import Fishtank, FishtankSetting, OwnBackground
+from apps.aquatics.models import Fishtank, FishtankSetting, OwnBackground,ContributionFish
 from apps.aquatics.serializers_fishtank import (
     FishtankDetailSerializer,
     FishtankBackgroundSerializer,
@@ -152,3 +152,70 @@ class FishtankExportView(APIView):
 
         # 저장 필드가 모델에 아직 없기 때문에, 저장 로직은 후에 추가 가능
         return Response({"detail": "Saved"}, status=200)
+    
+# 9) 피쉬탱크 선택 가능한 물고기 목록
+class FishtankSelectableFishView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="피쉬탱크 선택 가능한 물고기 목록 조회",
+        operation_description="레포지토리 내 ContributionFish 전체를 조회하고, is_visible 여부를 selected로 반환합니다.",
+    )
+    def get(self, request, repo_id):
+        try:
+            fishtank = Fishtank.objects.get(repository_id=repo_id)
+        except Fishtank.DoesNotExist:
+            return Response({"detail": "Fishtank not found"}, status=404)
+
+        fishes = ContributionFish.objects.filter(
+            contributor__repository_id=repo_id
+        ).select_related("fish_species", "contributor__user")
+
+        data = []
+        for f in fishes:
+            data.append({
+                "id": f.id,
+                "username": f.contributor.user.username,
+                "species": f.fish_species.name,
+                "commit_count": f.contributor.commit_count,
+                "selected": f.is_visible,
+            })
+
+        return Response({"fishes": data}, status=200)
+# 10) 피쉬탱크 Export → 선택 상태 실제 저장
+class FishtankExportSelectionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="피쉬탱크 Export - 선택된 물고기 적용",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "fish_ids": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER)
+                )
+            },
+            required=["fish_ids"]
+        ),
+        responses={200: "Saved"}
+    )
+    def post(self, request, repo_id):
+        selected_ids = request.data.get("fish_ids", [])
+
+        try:
+            Fishtank.objects.get(repository_id=repo_id)
+        except Fishtank.DoesNotExist:
+            return Response({"detail": "Fishtank not found"}, status=404)
+
+        fishes = ContributionFish.objects.filter(
+            contributor__repository_id=repo_id
+        )
+
+        # 1) 선택되지 않은 물고기 → 숨김
+        fishes.exclude(id__in=selected_ids).update(is_visible=False)
+
+        # 2) 선택된 물고기 → 표시
+        fishes.filter(id__in=selected_ids).update(is_visible=True)
+
+        return Response({"detail": "Fishtank updated"}, status=200)
