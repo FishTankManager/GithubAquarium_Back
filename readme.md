@@ -2,9 +2,11 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 도움 되는 명령어
+uv run ruff check . --fix
 uv run manage.py graph_models -a -o erd.png
 uv run manage.py show_urls
-uv run ruff check . --fix
+uv run manage.py migrate
+uv run manage.py collectstatic
 git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > all.txt
 
 .env 예시 format

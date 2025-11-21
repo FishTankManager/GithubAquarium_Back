@@ -57,4 +57,8 @@ urlpatterns = [
     # Include URL configurations from the 'repositories' and 'users' apps
     path('repositories/', include('apps.repositories.urls')),
     path('users/', include('apps.users.urls')),
+    path('aquatics/', include('apps.aquatics.urls')),
+    
+    # --- DRF Auth ---
+    path('api-auth/', include('rest_framework.urls')),
 ]
