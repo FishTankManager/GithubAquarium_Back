@@ -30,8 +30,8 @@ def extract_svg_size(svg_text: str):
 
 def strip_outer_svg(svg_text: str) -> str:
     """
-    Removes the <svg> outer wrapper and returns only inner nodes.
-    Required because species/background templates are stored as full SVGs.
+    species/background 템플릿이 풀 SVG로 들어있을 때
+    가장 바깥 <svg> 래퍼만 제거하고 안쪽 노드만 반환.
     """
     if not svg_text:
         return ""
@@ -39,6 +39,8 @@ def strip_outer_svg(svg_text: str) -> str:
     # Find first tag after <svg ...>
     start = svg_text.find(">") + 1
     end = svg_text.rfind("</svg>")
+    if start <= 0 or end == -1:
+        return svg_text.strip()
     return svg_text[start:end].strip()
 
 def safe_attr(value):
