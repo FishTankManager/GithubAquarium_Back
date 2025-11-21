@@ -303,3 +303,21 @@ LOGGING = {
         },
     },
 }
+
+# --- drf-yasg Settings ---
+SWAGGER_SETTINGS = {
+    # 'Django login' 버튼과 세션 인증 관련 동작을 비활성화합니다.
+    'USE_SESSION_AUTH': False,
+    # JWT를 사용하므로 인증 방법을 Bearer Token으로 설정합니다.
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"'
+        }
+    },
+    'SECURITY_REQUIRMENTS': [
+        {'Bearer': []},
+    ],
+}
