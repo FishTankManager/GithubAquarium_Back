@@ -6,6 +6,8 @@ from .views_fishtank import (
     FishtankBackgroundListView,
     ApplyFishtankBackgroundView,
     FishtankExportView,
+    FishtankSelectableFishView,
+    FishtankExportSelectionView,
 )
 from .views_aquarium import *
 
@@ -15,13 +17,17 @@ urlpatterns = [
     path("fishtank/backgrounds/", FishtankBackgroundListView.as_view()),
     path("fishtank/<int:repo_id>/apply-background/", ApplyFishtankBackgroundView.as_view()),
     path("fishtank/<int:repo_id>/export/", FishtankExportView.as_view()),
-    path("svg/", AquariumSVGView.as_view(), name="aquarium-svg"),
+    path("fishtank/<int:repo_id>/selectable-fish/", FishtankSelectableFishView.as_view()),
+    path("fishtank/<int:repo_id>/export-selection/", FishtankExportSelectionView.as_view()),
+
     path("aquarium/", AquariumDetailView.as_view()),
     path("aquarium/my-fishes/", MyUnlockedFishListView.as_view()),
-    path("aquarium/add-fish/", AquariumAddFishView.as_view()),
-    path("aquarium/remove-fish/<int:fish_id>/", AquariumRemoveFishView.as_view()),
+    #path("aquarium/add-fish/", AquariumAddFishView.as_view()),
+    #path("aquarium/remove-fish/<int:fish_id>/", AquariumRemoveFishView.as_view()),
     path("aquarium/backgrounds/", AquariumBackgroundListView.as_view()),
     path("aquarium/apply-background/", AquariumApplyBackgroundView.as_view()),
     path("aquarium/export/", AquariumExportView.as_view()),
     path("aquarium/svg/", AquariumSVGView.as_view()),
+    path("aquarium/selectable-fish/", AquariumSelectableFishView.as_view()),
+    path("aquarium/export-selection/", AquariumExportSelectionView.as_view()),
 ]

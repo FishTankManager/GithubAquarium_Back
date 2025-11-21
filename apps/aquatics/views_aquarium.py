@@ -192,3 +192,65 @@ class AquariumSVGView(APIView):
     def get(self, request):
         svg = render_aquarium_svg(request.user)
         return Response(svg, content_type="image/svg+xml")
+
+
+# 9) 아쿠아리움 선택 가능한 물고기 목록
+class AquariumSelectableFishView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="선택 가능한 물고기 목록 조회",
+        operation_description="유저가 보유한 모든 ContributionFish를 selectable 형태로 반환합니다.",
+        responses={200: "Selectable fish list"}
+    )
+    def get(self, request):
+        user = request.user
+        aquarium = user.aquarium
+
+        fishes = ContributionFish.objects.filter(contributor__user=user) \
+            .select_related("fish_species", "contributor__repository")
+
+        data = []
+        for f in fishes:
+            data.append({
+                "id": f.id,
+                "species": f.fish_species.name,
+                "repo_name": f.contributor.repository.name,
+                "selected": (f.aquarium_id == aquarium.id)
+            })
+
+        return Response({"fishes": data}, status=200)
+# 10) Export: 프론트 선택 상태를 실제 DB에 반영
+class AquariumExportSelectionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="아쿠아리움 Export - 선택된 물고기 저장",
+        operation_description="프론트에서 최종 선택된 물고기 ID 목록을 받아 DB에 반영합니다.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "fish_ids": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER)
+                )
+            },
+            required=["fish_ids"]
+        ),
+        responses={200: "Saved"}
+    )
+    def post(self, request):
+        user = request.user
+        aquarium = user.aquarium
+        selected_ids = request.data.get("fish_ids", [])
+
+        # 1) 유저가 소유한 모든 fish 가져오기
+        all_my_fish = ContributionFish.objects.filter(contributor__user=user)
+
+        # 2) 선택되지 않은 물고기 → aquarium에서 제거
+        all_my_fish.exclude(id__in=selected_ids).update(aquarium=None)
+
+        # 3) 선택된 물고기 → aquarium에 추가
+        all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium)
+
+        return Response({"detail": "Aquarium updated"}, status=200)
