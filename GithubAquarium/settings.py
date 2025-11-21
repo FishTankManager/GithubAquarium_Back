@@ -34,6 +34,13 @@ DEBUG = env('DEBUG')
 # Allowed hosts for the application
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'githubaquarium.store', 'www.githubaquarium.store']
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://githubaquarium.store',
+    'https://www.githubaquarium.store',
+]
+
 # --- GitHub Application Credentials ---
 # Credentials for GitHub OAuth and App integration, loaded from .env
 GITHUB_APP_ID = env('GITHUB_APP_ID')
@@ -42,7 +49,6 @@ GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET')
 GITHUB_PRIVATE_KEY = base64.b64decode(str(env('GITHUB_PRIVATE_KEY_B64'))).decode('utf-8')
 GITHUB_WEBHOOK_SECRET = env('GITHUB_WEBHOOK_SECRET')
 GITHUB_CALLBACK_URL = env('GITHUB_CALLBACK_URL')
-
 
 # --- Application Definition ---
 # Lists all Django apps that are activated in this project.
@@ -154,7 +160,12 @@ USE_TZ = True # Use timezone-aware datetimes
 
 # --- Static Files ---
 # URL to use when referring to static files (CSS, JavaScript, Images)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') 
 STATIC_URL = 'static/'
+
+# --- Media Files ---\
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
+MEDIA_URL = '/media/'
 
 # --- Default Primary Key ---
 # Default primary key field type
@@ -220,7 +231,8 @@ REST_AUTH = {
     'JWT_AUTH_HTTPONLY': True, # Prevent client-side JS access to the auth token
     'JWT_AUTH_COOKIE': 'my-app-auth',
     'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
-    'JWT_AUTH_SAMESITE': 'Lax',
+    'JWT_AUTH_SAMESITE': 'None',
+    'JWT_AUTH_SECURE': True
 }
 
 # --- djangorestframework-simplejwt Settings ---
