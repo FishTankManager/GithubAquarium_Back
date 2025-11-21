@@ -161,7 +161,7 @@ USE_TZ = True # Use timezone-aware datetimes
 # --- Static Files ---
 # URL to use when referring to static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # --- Media Files ---\
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')

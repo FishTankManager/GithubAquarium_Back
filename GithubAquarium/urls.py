@@ -43,18 +43,18 @@ urlpatterns = [
 
     # --- Authentication (dj-rest-auth) ---
     # URLs for handling user authentication and social login
-    path('dj-rest-auth/github/', GitHubLogin.as_view(), name='github_login'),
-    path('dj-rest-auth/logout/', LogoutView.as_view(), name='rest_logout'),
-    path('dj-rest-auth/user/', UserDetailsView.as_view(), name='rest_user_details'),
-    path('dj-rest-auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('dj-rest-auth/token/refresh/', get_refresh_view().as_view(), name='token_refresh'),
+    path('api/dj-rest-auth/github/', GitHubLogin.as_view(), name='github_login'),
+    path('api/dj-rest-auth/logout/', LogoutView.as_view(), name='rest_logout'),
+    path('api/dj-rest-auth/user/', UserDetailsView.as_view(), name='rest_user_details'),
+    path('api/dj-rest-auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('api/dj-rest-auth/token/refresh/', get_refresh_view().as_view(), name='token_refresh'),
 
     # --- Webhooks ---
     # URL endpoint for receiving GitHub webhooks
-    path('webhooks/github/', GitHubWebhookView.as_view(), name='github_webhook'),
+    path('api/webhooks/github/', GitHubWebhookView.as_view(), name='github_webhook'),
 
     # --- Local App APIs ---
     # Include URL configurations from the 'repositories' and 'users' apps
-    path('repositories/', include('apps.repositories.urls')),
-    path('users/', include('apps.users.urls')),
+    path('api/repositories/', include('apps.repositories.urls')),
+    path('api/users/', include('apps.users.urls')),
 ]
