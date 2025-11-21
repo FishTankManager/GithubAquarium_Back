@@ -1,7 +1,7 @@
-# apps/repositories/urls.py
-
+from django.urls import path
+from .views import RepositoryListView
 app_name = 'repositories'
 
 urlpatterns = [
-    # Add repository-specific URLs here in the future
+    path("", RepositoryListView.as_view(), name="repository-list"),
 ]
