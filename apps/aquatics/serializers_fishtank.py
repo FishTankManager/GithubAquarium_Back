@@ -52,4 +52,4 @@ class FishtankDetailSerializer(serializers.ModelSerializer):
 class FishtankBackgroundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Background
-        fields = ["id", "name", "code", "svg_template"]
+        fields = ["id", "name", "code", "background_image"]
