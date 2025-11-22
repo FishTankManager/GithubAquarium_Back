@@ -39,6 +39,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     'https://githubaquarium.store',
     'https://www.githubaquarium.store',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
 ]
 
 # --- GitHub Application Credentials ---
@@ -182,6 +186,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://githubaquarium.store',
     'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
 ]
 # Allow cookies to be sent with cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
