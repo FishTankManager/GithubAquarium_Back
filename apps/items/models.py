@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
 
 class FishSpecies(models.Model):
     """
@@ -72,8 +73,12 @@ class Background(models.Model):
         db_index=True,
         help_text="A short, unique code for this background."
     )
-    svg_template = models.TextField(
-        help_text="The SVG source code template for this background."
+    background_image = models.ImageField(
+        upload_to="backgrounds/",
+        validators=[FileExtensionValidator(['png', 'jpg', 'jpeg'])],
+        help_text="배경 이미지 파일(PNG/JPG).",
+        null=True,
+        blank=True
     )
 
     def __str__(self):
