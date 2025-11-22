@@ -181,6 +181,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://githubaquarium.store',
+    'http://localhost:5173',
 ]
 # Allow cookies to be sent with cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
