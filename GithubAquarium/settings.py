@@ -15,110 +15,111 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # django-environ setup to manage environment variables
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 # Read .env file
-environ.Env.read_env(
-    env_file=os.path.join(BASE_DIR, '.env')
-)
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, ".env"))
 
 # --- Security and Core Django Settings ---
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env("DEBUG")
 
 # Allowed hosts for the application
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'githubaquarium.store', 'www.githubaquarium.store']
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "githubaquarium.store",
+    "www.githubaquarium.store",
+]
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://githubaquarium.store',
-    'https://www.githubaquarium.store',
+    "http://localhost:5173",
+    "https://githubaquarium.store",
+    "https://www.githubaquarium.store",
 ]
 
 # --- GitHub Application Credentials ---
 # Credentials for GitHub OAuth and App integration, loaded from .env
-GITHUB_APP_ID = env('GITHUB_APP_ID')
-GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID')
-GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET')
-GITHUB_PRIVATE_KEY = base64.b64decode(str(env('GITHUB_PRIVATE_KEY_B64'))).decode('utf-8')
-GITHUB_WEBHOOK_SECRET = env('GITHUB_WEBHOOK_SECRET')
-GITHUB_CALLBACK_URL = env('GITHUB_CALLBACK_URL')
+GITHUB_APP_ID = env("GITHUB_APP_ID")
+GITHUB_CLIENT_ID = env("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = env("GITHUB_CLIENT_SECRET")
+GITHUB_PRIVATE_KEY = base64.b64decode(str(env("GITHUB_PRIVATE_KEY_B64"))).decode(
+    "utf-8"
+)
+GITHUB_WEBHOOK_SECRET = env("GITHUB_WEBHOOK_SECRET")
+GITHUB_CALLBACK_URL = env("GITHUB_CALLBACK_URL")
 
 # --- Application Definition ---
 # Lists all Django apps that are activated in this project.
 INSTALLED_APPS = [
     # Django core apps
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites', # Required by django-allauth
-
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",  # Required by django-allauth
     # Third-party apps
-    'rest_framework',
-    'rest_framework.authtoken',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.github', # GitHub social login
-    'drf_yasg', # API documentation (Swagger)
-    'corsheaders', # Cross-Origin Resource Sharing
-
+    "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.github",  # GitHub social login
+    "drf_yasg",  # API documentation (Swagger)
+    "corsheaders",  # Cross-Origin Resource Sharing
     # Your custom apps
-    'apps.users',
-    'apps.repositories',
-    'apps.items',
-    'apps.aquatics',
-
+    "apps.users",
+    "apps.repositories",
+    "apps.items",
+    "apps.aquatics",
     # Development tools
-    'django_extensions',
+    "django_extensions",
 ]
 
 # --- Middleware Configuration ---
 # A list of middleware to be executed for each request/response.
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # allauth middleware
-    'allauth.account.middleware.AccountMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 # --- URL, Template, and WSGI Configuration ---
 # The root URL configuration file
-ROOT_URLCONF = 'GithubAquarium.urls'
+ROOT_URLCONF = "GithubAquarium.urls"
 
 # WSGI application entry point
-WSGI_APPLICATION = 'GithubAquarium.wsgi.application'
+WSGI_APPLICATION = "GithubAquarium.wsgi.application"
 
 # Template engine settings
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -127,49 +128,51 @@ TEMPLATES = [
 # --- Database Configuration ---
 # https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
 # --- Authentication and User Model ---
 # Custom user model for the project
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 # Authentication backends, including allauth's
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Password validation rules
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 # --- Internationalization ---
 # https://docs.djangoproject.com/en/stable/topics/i18n/
-LANGUAGE_CODE = 'ko-kr'
-TIME_ZONE = 'Asia/Seoul'
+LANGUAGE_CODE = "ko-kr"
+TIME_ZONE = "Asia/Seoul"
 USE_I18N = True
-USE_TZ = True # Use timezone-aware datetimes
+USE_TZ = True  # Use timezone-aware datetimes
 
 # --- Static Files ---
 # URL to use when referring to static files (CSS, JavaScript, Images)
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') 
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles_collected")
+STATIC_URL = "/static/"
 
 # --- Media Files ---\
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
-MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media_files")
+MEDIA_URL = "/media/"
 
 # --- Default Primary Key ---
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # -----------------------------------------------------------------------------
@@ -179,8 +182,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --- django-cors-headers Settings ---
 # Origins that are allowed to make cross-site HTTP requests
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'https://githubaquarium.store',
+    "http://localhost:5173",
+    "https://githubaquarium.store",
+    "https://www.githubaquarium.store",
 ]
 # Allow cookies to be sent with cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
@@ -191,65 +195,65 @@ SITE_ID = 1
 
 # Configuration for the GitHub social account provider
 SOCIALACCOUNT_PROVIDERS = {
-    'github': {
-        'APP': {
-            'client_id': GITHUB_CLIENT_ID,
-            'secret': GITHUB_CLIENT_SECRET,
+    "github": {
+        "APP": {
+            "client_id": GITHUB_CLIENT_ID,
+            "secret": GITHUB_CLIENT_SECRET,
         },
-        'SCOPE': [ # Permissions to request from the user
-            'user',
-            'repo',
-            'read:org',
+        "SCOPE": [  # Permissions to request from the user
+            "user",
+            "repo",
+            "read:org",
         ],
-        'AUTH_PARAMS': {'access_type': 'online'},
+        "AUTH_PARAMS": {"access_type": "online"},
     }
 }
 
 # Custom adapter to handle social account connections
-SOCIALACCOUNT_ADAPTER = 'apps.users.adapter.CustomSocialAccountAdapter'
+SOCIALACCOUNT_ADAPTER = "apps.users.adapter.CustomSocialAccountAdapter"
 SOCIALACCOUNT_REQUESTS_TIMEOUT = 5
-SOCIALACCOUNT_STORE_TOKENS = True # Store OAuth tokens
-SOCIALACCOUNT_ONLY = True # Only allow social account login
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Disable email verification
+SOCIALACCOUNT_STORE_TOKENS = True  # Store OAuth tokens
+SOCIALACCOUNT_ONLY = True  # Only allow social account login
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Disable email verification
 
 # --- djangorestframework (DRF) Settings ---
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # "rest_framework.authentication.SessionAuthentication",
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
 # --- dj-rest-auth Settings ---
 REST_AUTH = {
-    'USER_DETAILS_SERIALIZER': 'apps.users.serializers.UserSerializer',
-    'USE_JWT': True,
-    'SESSION_LOGIN': False, # Use tokens instead of sessions
-    'JWT_AUTH_HTTPONLY': True, # Prevent client-side JS access to the auth token
-    'JWT_AUTH_COOKIE': 'my-app-auth',
-    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
-    'JWT_AUTH_SAMESITE': 'None',
-    'JWT_AUTH_SECURE': True
+    "USER_DETAILS_SERIALIZER": "apps.users.serializers.UserSerializer",
+    "USE_JWT": True,
+    "SESSION_LOGIN": False,  # Use tokens instead of sessions
+    "JWT_AUTH_HTTPONLY": True,  # Prevent client-side JS access to the auth token
+    "JWT_AUTH_COOKIE": "my-app-auth",
+    "JWT_AUTH_REFRESH_COOKIE": "my-refresh-token",
+    "JWT_AUTH_SAMESITE": "None",
+    "JWT_AUTH_SECURE": True,
 }
 
 # --- djangorestframework-simplejwt Settings ---
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
 }
 
 # -----------------------------------------------------------------------------
@@ -257,61 +261,61 @@ SIMPLE_JWT = {
 # -----------------------------------------------------------------------------
 
 # Directory to store log files
-LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR = BASE_DIR / "logs"
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 # Logging setup for the application
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file': {
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': LOG_DIR / 'django.log',
-            'when': 'D',  # Rotate daily
-            'interval': 1,
-            'backupCount': 30,  # Keep 30 days of logs
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'DEBUG' if DEBUG else 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
+    "handlers": {
+        "console": {
+            "level": "DEBUG" if DEBUG else "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'WARNING',
-            'propagate': False,
+        "file": {
+            "level": "DEBUG" if DEBUG else "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": LOG_DIR / "django.log",
+            "when": "D",  # Rotate daily
+            "interval": 1,
+            "backupCount": 30,  # Keep 30 days of logs
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "DEBUG" if DEBUG else "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "DEBUG" if DEBUG else "WARNING",
+            "propagate": False,
         },
         # Your app's logger
-        'apps': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }
@@ -319,17 +323,17 @@ LOGGING = {
 # --- drf-yasg Settings ---
 SWAGGER_SETTINGS = {
     # 'Django login' 버튼과 세션 인증 관련 동작을 비활성화합니다.
-    'USE_SESSION_AUTH': False,
+    "USE_SESSION_AUTH": False,
     # JWT를 사용하므로 인증 방법을 Bearer Token으로 설정합니다.
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header',
-            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"'
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": 'JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"',
         }
     },
-    'SECURITY_REQUIRMENTS': [
-        {'Bearer': []},
+    "SECURITY_REQUIRMENTS": [
+        {"Bearer": []},
     ],
 }
