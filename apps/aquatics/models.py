@@ -125,9 +125,13 @@ class ContributionFish(models.Model):
         related_name='fishes',
         help_text="The aquarium this fish has been added to."
     )
-    is_visible = models.BooleanField(
+    is_visible_in_fishtank = models.BooleanField(
         default=True,
-        help_text="Determines whether this fish is visible in the fishtank."
+        help_text="Determines whether this fish is visible in the repository fishtank."
+    )
+    is_visible_in_aquarium = models.BooleanField(
+        default=True,
+        help_text="Determines whether this fish is visible in the personal aquarium."
     )
 
     def __str__(self):

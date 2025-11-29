@@ -18,7 +18,7 @@ class ContributionFishSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContributionFish
-        fields = ["id", "is_visible", "species"]
+        fields = ["id", "is_visible_in_fishtank", "species"]
 
     def get_species(self, obj):
         s = obj.fish_species

@@ -16,7 +16,7 @@ def render_aquarium_svg(user,width=512, height=512):
     height = 512
     fishes = ContributionFish.objects.filter(
         aquarium=aquarium,
-        is_visible=True
+        is_visible_in_aquarium=True
     ).select_related("fish_species", "contributor__repository")
 
     fish_groups = [
@@ -51,7 +51,7 @@ def render_fishtank_svg(repository):
     height = 512
     fishes = ContributionFish.objects.filter(
         contributor__repository=repository,
-        is_visible=True
+        is_visible_in_fishtank=True
     ).select_related("fish_species", "contributor__user")
 
     fish_groups = [

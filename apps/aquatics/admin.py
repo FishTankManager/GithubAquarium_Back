@@ -25,8 +25,9 @@ class FishtankAdmin(admin.ModelAdmin):
 
 @admin.register(ContributionFish)
 class ContributionFishAdmin(admin.ModelAdmin):
-    list_display = ('contributor', 'fish_species', 'aquarium', 'is_visible')
-    list_filter = ('is_visible', 'fish_species')
+    # list_display 및 list_filter 수정
+    list_display = ('contributor', 'fish_species', 'aquarium', 'is_visible_in_fishtank', 'is_visible_in_aquarium')
+    list_filter = ('is_visible_in_fishtank', 'is_visible_in_aquarium', 'fish_species')
     search_fields = ('contributor__user__username', 'fish_species__name')
 
 @admin.register(FishtankSetting)

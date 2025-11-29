@@ -212,11 +212,12 @@ class AquariumSelectableFishView(APIView):
 
         data = []
         for f in fishes:
+            is_in_aquarium = (f.aquarium_id == aquarium.id)
             data.append({
                 "id": f.id,
                 "species": f.fish_species.name,
                 "repo_name": f.contributor.repository.name,
-                "selected": (f.aquarium_id == aquarium.id)
+                "selected": is_in_aquarium and f.is_visible_in_aquarium
             })
 
         return Response({"fishes": data}, status=200)
@@ -249,8 +250,8 @@ class AquariumExportSelectionView(APIView):
 
         # 2) 선택되지 않은 물고기 → aquarium에서 제거
         all_my_fish.exclude(id__in=selected_ids).update(aquarium=None)
-
-        # 3) 선택된 물고기 → aquarium에 추가
-        all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium)
+        
+        # 3) 선택된 물고기 → aquarium에 추가하고 보이게 설정
+        all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium, is_visible_in_aquarium=True)
 
         return Response({"detail": "Aquarium updated"}, status=200)
