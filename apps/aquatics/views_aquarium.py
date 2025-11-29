@@ -1,12 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from apps.aquatics.models import Aquarium, ContributionFish, OwnBackground
+from apps.aquatics.models import ContributionFish, OwnBackground
 from apps.aquatics.serializers_aquarium import (
     AquariumDetailSerializer,
     AquariumFishSerializer,

@@ -1,7 +1,5 @@
-from apps.items.models import FishSpecies
 from apps.aquatics.models import Aquarium,ContributionFish , Fishtank
 from .sprite import render_fish_group
-from .utils import strip_outer_svg , extract_svg_size
 
 def render_aquarium_svg(user,width=512, height=512):
     aquarium = Aquarium.objects.get(user=user)

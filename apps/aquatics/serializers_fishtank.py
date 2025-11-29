@@ -1,7 +1,7 @@
 # apps/aquatics/serializers_fishtank.py
 from rest_framework import serializers
-from apps.aquatics.models import Fishtank, ContributionFish, FishtankSetting, OwnBackground
-from apps.repositories.models import Contributor, Repository
+from apps.aquatics.models import Fishtank, ContributionFish
+from apps.repositories.models import Contributor
 from apps.items.models import Background
 
 
