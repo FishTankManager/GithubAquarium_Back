@@ -1,10 +1,11 @@
+#aquatics/views_aquarium.py
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from django.http import HttpResponse
 from apps.aquatics.models import ContributionFish, OwnBackground
 from apps.aquatics.serializers_aquarium import (
     AquariumDetailSerializer,
@@ -190,7 +191,7 @@ class AquariumSVGView(APIView):
     )
     def get(self, request):
         svg = render_aquarium_svg(request.user)
-        return Response(svg, content_type="image/svg+xml")
+        return HttpResponse(svg, content_type="image/svg+xml")
 
 
 # 9) 아쿠아리움 선택 가능한 물고기 목록
@@ -254,3 +255,56 @@ class AquariumExportSelectionView(APIView):
         all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium, is_visible_in_aquarium=True)
 
         return Response({"detail": "Aquarium updated"}, status=200)
+
+
+class AquariumSpriteListView(APIView):
+    """
+    프론트 FishTankTest + FishSpriteTest에 맞는 데이터 포맷:
+    - background_url: 현재 아쿠아리움 배경 이미지
+    - fishes: [{ id, label, svg_source }, ...]
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="아쿠아리움용 스프라이트 리스트",
+        operation_description=(
+            "프론트에서 FishTankTest / FishSpriteTest로 바로 사용할 수 있도록 "
+            "배경 이미지와 각 물고기의 스프라이트 SVG를 반환합니다."
+        ),
+        responses={200: "background_url + fishes 배열"}
+    )
+    def get(self, request):
+        user = request.user
+        aquarium: Aquarium = user.aquarium
+
+        # 배경 URL
+        if aquarium.background and aquarium.background.background.background_image:
+            bg_url = aquarium.background.background.background_image.url
+        else:
+            bg_url = ""
+
+        # 이 유저 아쿠아리움에 들어있는 물고기들
+        fishes = (
+            ContributionFish.objects
+            .filter(aquarium=aquarium, is_visible_in_aquarium=True)
+            .select_related("fish_species", "contributor__repository", "contributor__user")
+        )
+
+        fish_list = []
+        for cf in fishes:
+            # 프론트에서 label 로 쓸 텍스트 (원하는 쪽 골라서 사용)
+            # 예시 1: 레포지토리 이름
+            # label_text = cf.contributor.repository.name
+            # 예시 2: 기여자 username
+            label_text = cf.contributor.user.username
+
+            fish_list.append({
+                "id": cf.id,
+                "label": label_text,
+                "svg_source": cf.fish_species.svg_template,
+            })
+
+        return Response({
+            "background_url": bg_url,
+            "fishes": fish_list,
+        }, status=200)

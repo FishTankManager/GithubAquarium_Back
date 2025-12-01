@@ -1,11 +1,24 @@
+# apps/aquatics/renderer/sprite.py
 import random
 from .utils import strip_outer_svg
 
+def apply_sprite_id(svg_template: str, fish_id: int) -> str:
+    """
+    species.svg_template 안의 *{id} 플레이스홀더를
+    개별 물고기 id(예: 3, 7, 12)로 치환한다.
+    """
+    if not svg_template:
+        return ""
+    return svg_template.replace("*{id}", str(fish_id))
+
+
 def render_fish_group(cf, width, height,mode):
     species = cf.fish_species
-    raw_svg = species.svg_template
-    inner = strip_outer_svg(raw_svg)
     fish_id = cf.id
+    raw_svg = species.svg_template
+    templated_svg=apply_sprite_id(raw_svg, fish_id)
+    inner = strip_outer_svg(templated_svg)
+
 
     # === 레이블 내용 ===
     if mode == "aquarium":

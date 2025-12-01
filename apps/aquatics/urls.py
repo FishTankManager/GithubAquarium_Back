@@ -8,6 +8,7 @@ from .views_fishtank import (
     FishtankExportView,
     FishtankSelectableFishView,
     FishtankExportSelectionView,
+    FishtankSpriteListView,
 )
 from .views_aquarium import *
 
@@ -19,6 +20,7 @@ urlpatterns = [
     path("fishtank/<int:repo_id>/export/", FishtankExportView.as_view()),
     path("fishtank/<int:repo_id>/selectable-fish/", FishtankSelectableFishView.as_view()),
     path("fishtank/<int:repo_id>/export-selection/", FishtankExportSelectionView.as_view()),
+    path("fishtank/<int:repo_id>/sprites/", FishtankSpriteListView.as_view(), name="fishtank-sprites"),
 
     path("aquarium/", AquariumDetailView.as_view()),
     path("aquarium/my-fishes/", MyUnlockedFishListView.as_view()),
@@ -28,6 +30,7 @@ urlpatterns = [
     path("aquarium/apply-background/", AquariumApplyBackgroundView.as_view()),
     path("aquarium/export/", AquariumExportView.as_view()),
     path("aquarium/svg/", AquariumSVGView.as_view()),
+    path("aquarium/sprites/", AquariumSpriteListView.as_view(), name="aquarium-sprites"),
     path("aquarium/selectable-fish/", AquariumSelectableFishView.as_view()),
     path("aquarium/export-selection/", AquariumExportSelectionView.as_view()),
 ]

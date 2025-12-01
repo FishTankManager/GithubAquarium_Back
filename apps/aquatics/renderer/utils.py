@@ -1,3 +1,4 @@
+# apps/aquatics/renderer/utils.py
 import re
 
 def extract_svg_size(svg_text: str):

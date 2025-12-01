@@ -1,11 +1,11 @@
+#aquatics/views_fishtank.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-#fishtank views.py
-
+from django.http import HttpResponse
 from apps.repositories.models import Repository
 from apps.aquatics.models import Fishtank, FishtankSetting, OwnBackground,ContributionFish
 from apps.aquatics.serializers_fishtank import (
@@ -13,7 +13,7 @@ from apps.aquatics.serializers_fishtank import (
     FishtankBackgroundSerializer,
 )
 from apps.aquatics.renderer.tank import render_aquarium_svg
-
+from apps.aquatics.renderer.tank import render_fishtank_svg
 # ----------------------------------------------------------
 # 1) Fishtank 상세 조회
 # ----------------------------------------------------------
@@ -44,19 +44,17 @@ class FishtankSVGView(APIView):
     permission_classes = [IsAuthenticated]
     @swagger_auto_schema(
         operation_summary="피쉬탱크 SVG 렌더링",
-        operation_description="유저 기반 SVG 렌더링을 반환합니다.",
-        responses={200: "SVG XML String"}
+        operation_description="특정 Repository의 fishtank를 하나의 SVG로 렌더링합니다.",
+        responses={200: "SVG XML String"},
     )
-
     def get(self, request, repo_id):
         try:
-            Repository.objects.get(id=repo_id)
+            repository = Repository.objects.get(id=repo_id)
         except Repository.DoesNotExist:
             return Response({"detail": "Repository not found"}, status=404)
 
-        svg = render_aquarium_svg(request.user)
-        return Response(svg, content_type="image/svg+xml")
-
+        svg = render_fishtank_svg(repository)
+        return HttpResponse(svg, content_type="image/svg+xml")
 
 # ----------------------------------------------------------
 # 3) 유저가 소유한 fishtank 배경 목록
@@ -264,3 +262,57 @@ class FishtankExportSelectionView(APIView):
         fishes.filter(id__in=selected_ids).update(is_visible_in_fishtank=True)
 
         return Response({"detail": "Fishtank updated"}, status=200)
+
+class FishtankSpriteListView(APIView):
+    """
+    특정 레포지토리의 fishtank를 프론트 FishTankTest / FishSpriteTest로 그리기 위한 데이터.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="피쉬탱크용 스프라이트 리스트",
+        operation_description=(
+            "repo_id에 해당하는 Fishtank에서 표시 상태(is_visible_in_fishtank=True)인 "
+            "물고기들의 스프라이트 SVG와 라벨을 반환합니다."
+        ),
+        responses={200: "background_url + fishes 배열"}
+    )
+    def get(self, request, repo_id):
+        try:
+            repository = Repository.objects.get(id=repo_id)
+            fishtank = repository.fishtank
+        except Repository.DoesNotExist:
+            return Response({"detail": "Repository not found"}, status=404)
+        except Fishtank.DoesNotExist:
+            return Response({"detail": "Fishtank not found"}, status=404)
+
+        # 피쉬탱크 배경: FishtankSetting 에서 현재 유저가 설정한 배경 1개만 쓴다고 가정
+        setting = fishtank.settings.select_related("background__background").filter(
+            contributor=request.user
+        ).first()
+
+        if setting and setting.background and setting.background.background.background_image:
+            bg_url = setting.background.background.background_image.url
+        else:
+            bg_url = ""
+
+        fishes = (
+            ContributionFish.objects
+            .filter(contributor__repository=repository, is_visible_in_fishtank=True)
+            .select_related("fish_species", "contributor__user")
+        )
+
+        fish_list = []
+        for cf in fishes:
+            label_text = cf.contributor.user.username  # 혹은 repository.name 등
+
+            fish_list.append({
+                "id": cf.id,
+                "label": label_text,
+                "svg_source": cf.fish_species.svg_template,
+            })
+
+        return Response({
+            "background_url": bg_url,
+            "fishes": fish_list,
+        }, status=200)
