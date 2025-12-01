@@ -1,7 +1,5 @@
-from apps.items.models import FishSpecies
 from apps.aquatics.models import Aquarium,ContributionFish , Fishtank
 from .sprite import render_fish_group
-from .utils import strip_outer_svg , extract_svg_size
 
 def render_aquarium_svg(user,width=512, height=512):
     aquarium = Aquarium.objects.get(user=user)
@@ -16,7 +14,7 @@ def render_aquarium_svg(user,width=512, height=512):
     height = 512
     fishes = ContributionFish.objects.filter(
         aquarium=aquarium,
-        is_visible=True
+        is_visible_in_aquarium=True
     ).select_related("fish_species", "contributor__repository")
 
     fish_groups = [
@@ -51,7 +49,7 @@ def render_fishtank_svg(repository):
     height = 512
     fishes = ContributionFish.objects.filter(
         contributor__repository=repository,
-        is_visible=True
+        is_visible_in_fishtank=True
     ).select_related("fish_species", "contributor__user")
 
     fish_groups = [

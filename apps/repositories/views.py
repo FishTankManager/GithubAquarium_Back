@@ -3,9 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
-from apps.repositories.models import Repository, Contributor
+from apps.repositories.models import Repository
 from apps.repositories.serializers import RepositorySerializer
 
 

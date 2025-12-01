@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -224,7 +223,7 @@ class FishtankSelectableFishView(APIView):
                 "username": f.contributor.user.username,
                 "species": f.fish_species.name,
                 "commit_count": f.contributor.commit_count,
-                "selected": f.is_visible,
+                "selected": f.is_visible_in_fishtank,
             })
 
         return Response({"fishes": data}, status=200)
@@ -259,9 +258,9 @@ class FishtankExportSelectionView(APIView):
         )
 
         # 1) 선택되지 않은 물고기 → 숨김
-        fishes.exclude(id__in=selected_ids).update(is_visible=False)
+        fishes.exclude(id__in=selected_ids).update(is_visible_in_fishtank=False)
 
         # 2) 선택된 물고기 → 표시
-        fishes.filter(id__in=selected_ids).update(is_visible=True)
+        fishes.filter(id__in=selected_ids).update(is_visible_in_fishtank=True)
 
         return Response({"detail": "Fishtank updated"}, status=200)

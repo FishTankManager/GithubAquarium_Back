@@ -1,7 +1,7 @@
 # apps/aquatics/serializers_fishtank.py
 from rest_framework import serializers
-from apps.aquatics.models import Fishtank, ContributionFish, FishtankSetting, OwnBackground
-from apps.repositories.models import Contributor, Repository
+from apps.aquatics.models import Fishtank, ContributionFish
+from apps.repositories.models import Contributor
 from apps.items.models import Background
 
 
@@ -18,7 +18,7 @@ class ContributionFishSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContributionFish
-        fields = ["id", "is_visible", "species"]
+        fields = ["id", "is_visible_in_fishtank", "species"]
 
     def get_species(self, obj):
         s = obj.fish_species

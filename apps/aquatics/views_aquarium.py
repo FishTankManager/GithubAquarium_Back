@@ -1,12 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from apps.aquatics.models import Aquarium, ContributionFish, OwnBackground
+from apps.aquatics.models import ContributionFish, OwnBackground
 from apps.aquatics.serializers_aquarium import (
     AquariumDetailSerializer,
     AquariumFishSerializer,
@@ -212,11 +211,12 @@ class AquariumSelectableFishView(APIView):
 
         data = []
         for f in fishes:
+            is_in_aquarium = (f.aquarium_id == aquarium.id)
             data.append({
                 "id": f.id,
                 "species": f.fish_species.name,
                 "repo_name": f.contributor.repository.name,
-                "selected": (f.aquarium_id == aquarium.id)
+                "selected": is_in_aquarium and f.is_visible_in_aquarium
             })
 
         return Response({"fishes": data}, status=200)
@@ -249,8 +249,8 @@ class AquariumExportSelectionView(APIView):
 
         # 2) 선택되지 않은 물고기 → aquarium에서 제거
         all_my_fish.exclude(id__in=selected_ids).update(aquarium=None)
-
-        # 3) 선택된 물고기 → aquarium에 추가
-        all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium)
+        
+        # 3) 선택된 물고기 → aquarium에 추가하고 보이게 설정
+        all_my_fish.filter(id__in=selected_ids).update(aquarium=aquarium, is_visible_in_aquarium=True)
 
         return Response({"detail": "Aquarium updated"}, status=200)
