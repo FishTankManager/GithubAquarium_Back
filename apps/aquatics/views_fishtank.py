@@ -158,8 +158,54 @@ class FishtankSelectableFishView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        operation_summary="피쉬탱크 선택 가능한 물고기 목록 조회",
-        operation_description="레포지토리 내 ContributionFish 전체를 조회하고, is_visible 여부를 selected로 반환합니다.",
+        operation_summary="특정 Repository의 Fishtank 물고기 목록 조회",
+        operation_description=(
+            "repository_id에 해당하는 Fishtank에서 기여자 기반으로 생성된 "
+            "ContributionFish 목록을 반환합니다.\n\n"
+            "각 객체는 물고기의 식별자(id), 기여자 username, "
+            "물고기 species 이름, commit_count, 그리고 사용자가 현재 FishTank에 "
+            "표시되도록 선택했는지 여부(selected)를 포함합니다."
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                'repo_id',
+                openapi.IN_PATH,
+                description="Repository ID",
+                type=openapi.TYPE_INTEGER,
+                required=True,
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="물고기 목록 반환",
+                examples={
+                    "application/json": {
+                        "fishes": [
+                            {
+                                "id": 12,
+                                "username": "alice",
+                                "species": "Salmon",
+                                "commit_count": 34,
+                                "selected": True
+                            },
+                            {
+                                "id": 13,
+                                "username": "bob",
+                                "species": "Goldfish",
+                                "commit_count": 12,
+                                "selected": False
+                            }
+                        ]
+                    }
+                }
+            ),
+            404: openapi.Response(
+                description="Fishtank not found",
+                examples={
+                    "application/json": {"detail": "Fishtank not found"}
+                }
+            )
+        }
     )
     def get(self, request, repo_id):
         try:
