@@ -2,17 +2,12 @@
 import hashlib
 import hmac
 import logging # Import the logging module
-from datetime import datetime
 from django.conf import settings
-from django.utils import timezone
-from django.db import transaction
+from django_q.tasks import async_task
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from dateutil.parser import parse as parse_datetime
 
-from apps.repositories.models import Repository, Commit
-from apps.users.models import User
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -27,56 +22,6 @@ class GitHubWebhookView(APIView):
     then processes 'star', 'push', and 'meta' events to keep the database
     in sync with GitHub.
     """
-
-    def _parse_date(self, date_value):
-        """
-        Handles both Unix timestamps and ISO 8601 date strings from GitHub payloads.
-        Returns a timezone-aware datetime object or None.
-        """
-        if not date_value:
-            return None
-        if isinstance(date_value, int):
-            return datetime.fromtimestamp(date_value, tz=timezone.utc)
-        if isinstance(date_value, str):
-            # Use dateutil.parser for robust parsing of ISO 8601 strings
-            return parse_datetime(date_value)
-        return None
-
-    def _update_or_create_user(self, user_data):
-        """
-        Gets or creates a user from webhook payload data.
-        This ensures that users related to events (owners, senders) are in our DB.
-        """
-        user, _ = User.objects.update_or_create(
-            github_id=user_data['id'],
-            defaults={
-                'username': user_data['login'],
-                'github_username': user_data['login'],
-                'avatar_url': user_data.get('avatar_url', ''),
-            }
-        )
-        return user
-
-    def _update_or_create_repository(self, repo_data, owner):
-        """
-        Gets or creates a repository from webhook payload data.
-        This ensures repository information is stored and associated with the correct owner.
-        """
-        repository, created = Repository.objects.update_or_create(
-            github_id=repo_data['id'],
-            defaults={
-                'name': repo_data['name'],
-                'full_name': repo_data['full_name'],
-                'description': repo_data['description'],
-                'html_url': repo_data['html_url'],
-                'stargazers_count': repo_data['stargazers_count'],
-                'language': repo_data['language'],
-                'created_at': self._parse_date(repo_data.get('created_at')),
-                'updated_at': self._parse_date(repo_data.get('updated_at')),
-                'owner': owner,
-            }
-        )
-        return repository
 
     @swagger_auto_schema(
         summary="GitHub Webhook Handler",
@@ -93,9 +38,8 @@ class GitHubWebhookView(APIView):
         operation_id="handle_github_webhook",
         tags=["Webhooks"],
     )
-    @transaction.atomic
     def post(self, request, *args, **kwargs):
-        # 1. Verify the request signature for security
+        # 1. Verify Signature (보안 검증은 동기로 즉시 처리해야 함)
         signature_header = request.headers.get('X-Hub-Signature-256')
         if not signature_header:
             return Response({'detail': 'Signature header missing'}, status=status.HTTP_403_FORBIDDEN)
@@ -108,80 +52,19 @@ class GitHubWebhookView(APIView):
         if not hmac.compare_digest(mac.hexdigest(), signature):
             return Response({'detail': 'Invalid signature'}, status=status.HTTP_403_FORBIDDEN)
 
-        # 2. Identify the event type and process the payload
+        # 2. 작업 Queue에 등록
         event_type = request.headers.get('X-GitHub-Event')
         payload = request.data
 
-        if event_type == 'star':
-            # Handle star/unstar events
-            repo_data = payload['repository']
-            owner_data = repo_data['owner']
-            
-            owner = self._update_or_create_user(owner_data)
-            repository = self._update_or_create_repository(repo_data, owner)
+        # 비동기 Task 호출
+        async_task(
+            'apps.repositories.tasks.process_webhook_event_task', # Task 함수 경로
+            event_type,
+            payload,
+            group='webhooks' # 그룹을 지정하면 나중에 관리하기 편함
+        )
+        
+        logger.info(f"Webhook event '{event_type}' queued for processing.")
 
-            # Update stargazers_count as it's the primary data change in this event
-            repository.stargazers_count = repo_data['stargazers_count']
-            repository.save()
-
-            # Replaced print() with logger.info()
-            logger.info("Handled 'star' event for repository: %s", repository.full_name)
-
-        elif event_type == 'push':
-            # Handle push events with new commits
-            repo_data = payload['repository']
-            owner_data = repo_data['owner']
-            
-            owner = self._update_or_create_user(owner_data)
-            repository = self._update_or_create_repository(repo_data, owner)
-            
-            # Sync repository data that might change during a push
-            repository.description = repo_data['description']
-            repository.language = repo_data['language']
-            repository.stargazers_count = repo_data['stargazers_count']
-            
-            # Safely update the 'updated_at' field
-            parsed_updated_at = self._parse_date(repo_data.get('updated_at'))
-            if parsed_updated_at:
-                repository.updated_at = parsed_updated_at
-            repository.save()
-
-            # Process each commit in the push
-            
-            # 1. Collect all author usernames from the commits payload outside the loop.
-            author_usernames = {
-                commit_data['author'].get('username')
-                for commit_data in payload['commits']
-                if commit_data['author'].get('username')
-            }
-
-            # 2. Fetch all relevant users in a single database query.
-            users = User.objects.filter(github_username__in=author_usernames)
-            
-            # 3. Create a dictionary (map) for quick user lookup by username.
-            user_map = {user.github_username: user for user in users}
-
-            for commit_data in payload['commits']:
-                # 4. Look up the user from the map instead of hitting the database.
-                commit_author = user_map.get(commit_data['author'].get('username'))
-
-                Commit.objects.get_or_create(
-                    sha=commit_data['id'],
-                    defaults={
-                        'repository': repository,
-                        'author': commit_author,
-                        'message': commit_data['message'],
-                        'committed_at': self._parse_date(commit_data['timestamp']),
-                        'author_name': commit_data['author']['name'],
-                        'author_email': commit_data['author']['email'],
-                    }
-                )
-            logger.info("Handled 'push' event for repository: %s", repository.full_name)
-
-        elif event_type == 'meta':
-            # Handle webhook meta-events (e.g., when a webhook is deleted)
-            logger.info("Received 'meta' event from GitHub webhook.")
-        else:
-            logger.warning("Received unhandled GitHub webhook event type: %s", event_type)
-
-        return Response(status=status.HTTP_200_OK)
+        # 3. GitHub에 즉시 성공 응답 반환
+        return Response({'detail': 'Event queued'}, status=status.HTTP_200_OK)

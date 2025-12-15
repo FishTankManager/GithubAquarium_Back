@@ -12,7 +12,6 @@ from apps.aquatics.serializers_fishtank import (
     FishtankDetailSerializer,
     FishtankBackgroundSerializer,
 )
-from apps.aquatics.renderer.tank import render_aquarium_svg
 from apps.aquatics.renderer.tank import render_fishtank_svg
 # ----------------------------------------------------------
 # 1) Fishtank 상세 조회
