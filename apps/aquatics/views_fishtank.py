@@ -28,9 +28,14 @@ class FishtankDetailView(APIView):
     def get(self, request, repo_id):
         try:
             repository = Repository.objects.get(id=repo_id)
-            fishtank = repository.fishtank
         except Repository.DoesNotExist:
             return Response({"detail": "Repository not found"}, status=404)
+        
+        # Fishtank가 없으면 자동으로 생성
+        fishtank, created = Fishtank.objects.get_or_create(
+            repository=repository,
+            defaults={'svg_path': ''}
+        )
 
         serializer = FishtankDetailSerializer(fishtank)
         return Response(serializer.data, status=200)
@@ -205,16 +210,38 @@ class FishtankSelectableFishView(APIView):
         }
     )
     def get(self, request, repo_id):
+        # Repository 존재 확인
         try:
-            fishtank = Fishtank.objects.get(repository_id=repo_id)
-        except Fishtank.DoesNotExist:
-            return Response({"detail": "Fishtank not found"}, status=404)
+            repository = Repository.objects.get(id=repo_id)
+        except Repository.DoesNotExist:
+            return Response({"detail": "Repository not found"}, status=404)
+        
+        # Fishtank가 없으면 자동으로 생성
+        fishtank, created = Fishtank.objects.get_or_create(
+            repository=repository,
+            defaults={'svg_path': ''}
+        )
 
         fishes = ContributionFish.objects.filter(
             contributor__repository_id=repo_id
         ).select_related("fish_species", "contributor__user")
 
+        # 가장 높은 maturity를 가진 물고기의 group_code 찾기
+        highest_group_code = None
+        if fishes.exists():
+            highest_fish = max(fishes, key=lambda f: f.fish_species.maturity)
+            highest_group_code = highest_fish.fish_species.group_code
+
+        # 같은 group_code를 가진 모든 FishSpecies 가져오기 (할당되지 않은 것도 포함)
+        from apps.items.models import FishSpecies
+        all_group_fishes = []
+        if highest_group_code:
+            all_group_fishes = FishSpecies.objects.filter(
+                group_code=highest_group_code
+            ).order_by('maturity')
+
         data = []
+        # 실제로 할당된 물고기들 추가
         for f in fishes:
             data.append({
                 "id": f.id,
@@ -222,7 +249,28 @@ class FishtankSelectableFishView(APIView):
                 "species": f.fish_species.name,
                 "commit_count": f.contributor.commit_count,
                 "selected": f.is_visible_in_fishtank,
+                "maturity": f.fish_species.maturity,
+                "required_commits": f.fish_species.required_commits,
+                "group_code": f.fish_species.group_code,
+                "is_assigned": True,  # 실제로 할당된 물고기
             })
+
+        # 같은 group_code를 가진 할당되지 않은 maturity 단계들도 추가
+        assigned_maturities = {f.fish_species.maturity for f in fishes if f.fish_species.group_code == highest_group_code}
+        for fs in all_group_fishes:
+            if fs.maturity not in assigned_maturities:
+                # 할당되지 않은 maturity 단계는 기본 정보만 포함
+                data.append({
+                    "id": None,  # 할당되지 않았으므로 ID 없음
+                    "username": None,
+                    "species": fs.name,
+                    "commit_count": 0,
+                    "selected": False,
+                    "maturity": fs.maturity,
+                    "required_commits": fs.required_commits,
+                    "group_code": fs.group_code,
+                    "is_assigned": False,  # 할당되지 않은 물고기
+                })
 
         return Response({"fishes": data}, status=200)
 # 10) 피쉬탱크 Export → 선택 상태 실제 저장

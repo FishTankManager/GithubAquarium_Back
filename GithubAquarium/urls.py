@@ -22,6 +22,8 @@ from drf_yasg import openapi
 
 # --- API Documentation (Swagger/drf-yasg) ---
 # Setup for generating API documentation
+# Use localhost for development, production URL for production
+schema_url = 'http://localhost:8000' if settings.DEBUG else 'https://githubaquarium.store'
 schema_view = get_schema_view(
    openapi.Info(
       title="GithubAquarium API",
@@ -30,7 +32,7 @@ schema_view = get_schema_view(
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
-   url='https://githubaquarium.store',
+   url=schema_url,
 )
 
 urlpatterns = [
