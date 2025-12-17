@@ -20,13 +20,23 @@ class RepositoryListView(APIView):
         responses={200: RepositorySerializer(many=True)},
     )
     def get(self, request):
-        user = request.user
+        try:
+            user = request.user
 
-        # user가 contributor 이고 commit_count > 0 인 repo만 조회
-        contributed_repos = Repository.objects.filter(
-            contributors__user=user,
-            contributors__commit_count__gt=0
-        ).distinct().order_by("-updated_at")
+            # user가 contributor 이고 commit_count > 0 인 repo만 조회
+            contributed_repos = Repository.objects.filter(
+                contributors__user=user,
+                contributors__commit_count__gt=0
+            ).distinct().order_by("-updated_at")
 
-        serializer = RepositorySerializer(contributed_repos, many=True)
-        return Response(serializer.data, status=200)
+            serializer = RepositorySerializer(contributed_repos, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            # 로깅은 Django의 기본 로깅 시스템을 사용
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error fetching repositories for user {request.user.id}: {str(e)}", exc_info=True)
+            return Response(
+                {"detail": "레포지토리 목록을 불러오는 중 오류가 발생했습니다."},
+                status=500
+            )
