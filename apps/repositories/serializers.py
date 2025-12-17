@@ -6,10 +6,28 @@ class RepositorySerializer(serializers.ModelSerializer):
     """
     Serializer for the Repository model.
     Converts Repository instances to JSON, including all fields.
+    역참조 관계(contributors, commits)는 제외하여 순환 참조를 방지합니다.
     """
     class Meta:
         model = Repository
-        fields = '__all__'
+        fields = [
+            'id',
+            'github_id',
+            'name',
+            'full_name',
+            'description',
+            'html_url',
+            'stargazers_count',
+            'language',
+            'commit_count',
+            'created_at',
+            'updated_at',
+            'last_synced_at',
+            'owner',
+            'default_branch',
+            'last_synced_hash',
+            'dirty_at',
+        ]
 
 class ContributorSerializer(serializers.ModelSerializer):
     """
