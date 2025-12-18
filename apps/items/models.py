@@ -13,12 +13,12 @@ class FishSpecies(models.Model):
         LEGENDARY = 5, 'Legendary'
 
     class Maturity(models.IntegerChoices):
-        HATCHLING = 0, 'Hatchling'
-        JUVENILE = 1, 'Juvenile'
-        YOUNGLING = 2, 'Youngling'
-        ADULT = 3, 'Adult'
-        ADVANCED = 4, 'Advanced'
-        MASTER = 5, 'Master'
+        HATCHLING = 1, 'Hatchling'
+        JUVENILE = 2, 'Juvenile'
+        YOUNGLING = 3, 'Youngling'
+        ADULT = 4, 'Adult'
+        ADVANCED = 5, 'Advanced'
+        MASTER = 6, 'Master'
 
     name = models.CharField(
         max_length=100,
@@ -33,7 +33,7 @@ class FishSpecies(models.Model):
     )
     maturity = models.IntegerField(
         choices=Maturity.choices,
-        default=Maturity.HATCHLING,
+        default=Maturity.HATCHLING,  # 1
         help_text="The evolution stage of the fish."
     )
     required_commits = models.PositiveIntegerField(
