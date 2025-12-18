@@ -158,6 +158,7 @@ class AquariumApplyBackgroundView(APIView):
 # ----------------------------------------------------------
 # 7) Export 저장 (scale/offset)
 # ----------------------------------------------------------
+'''
 class AquariumExportView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -177,7 +178,7 @@ class AquariumExportView(APIView):
     def post(self, request):
         # 모델 확장 시 여기에 저장 로직 추가
         return Response({"detail": "Saved"}, status=200)
-
+'''
 
 # ----------------------------------------------------------
 # 8) SVG 렌더링

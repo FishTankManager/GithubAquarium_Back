@@ -128,6 +128,7 @@ class ApplyFishtankBackgroundView(APIView):
 # ----------------------------------------------------------
 # 5) Fishtank Export (scale, offset 저장)
 # ----------------------------------------------------------
+'''
 class FishtankExportView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -149,7 +150,7 @@ class FishtankExportView(APIView):
 
         # 저장 필드가 모델에 아직 없기 때문에, 저장 로직은 후에 추가 가능
         return Response({"detail": "Saved"}, status=200)
-    
+'''    
 # 9) 피쉬탱크 선택 가능한 물고기 목록
 class FishtankSelectableFishView(APIView):
     permission_classes = [IsAuthenticated]
