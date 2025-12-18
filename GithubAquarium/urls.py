@@ -61,9 +61,9 @@ urlpatterns = [
     # --- Local App APIs ---
     # Include URL configurations from the 'repositories' and 'users' apps
     path('api/repositories/', include('apps.repositories.urls')),
-    path('api/users/', include('apps.users.urls')),
+    # path('api/users/', include('apps.users.urls')),
     path('api/aquatics/', include('apps.aquatics.urls')),
-    path('api/shop/', include('apps.shop.urls')),
+    # path('api/shop/', include('apps.shop.urls')),
     
     # --- DRF Auth ---
     path('api-auth/', include('rest_framework.urls')),

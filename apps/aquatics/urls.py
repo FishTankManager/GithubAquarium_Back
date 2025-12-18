@@ -1,36 +1,27 @@
 from django.urls import path
-from .views import AquariumSVGView
-from .views_fishtank import (
+from .views import (
+    AquariumDetailView, 
+    AquariumBackgroundUpdateView,
+    AquariumFishVisibilityUpdateView,
     FishtankDetailView,
-    FishtankSVGView,
-    FishtankBackgroundListView,
-    ApplyFishtankBackgroundView,
-    #FishtankExportView,
-    FishtankSelectableFishView,
-    FishtankExportSelectionView,
-    FishtankSpriteListView,
+    FishtankBackgroundUpdateView,
+    FishtankFishVisibilityUpdateView,
+    UserContributionFishListView,
+    UserOwnBackgroundListView,
 )
-from .views_aquarium import *
 
 urlpatterns = [
-    path("fishtank/<int:repo_id>/", FishtankDetailView.as_view()),
-    path("fishtank/<int:repo_id>/svg/", FishtankSVGView.as_view()),
-    path("fishtank/backgrounds/", FishtankBackgroundListView.as_view()),
-    path("fishtank/<int:repo_id>/apply-background/", ApplyFishtankBackgroundView.as_view()),
-    #path("fishtank/<int:repo_id>/export/", FishtankExportView.as_view()),
-    path("fishtank/<int:repo_id>/apply-fish/", FishtankSelectableFishView.as_view()),
-    path("fishtank/<int:repo_id>/export-selection/", FishtankExportSelectionView.as_view()),
-    path("fishtank/<int:repo_id>/sprites/", FishtankSpriteListView.as_view(), name="fishtank-sprites"),
+    # --- 개인 아쿠아리움 관리 ---
+    path('aquarium/', AquariumDetailView.as_view(), name='aquarium-detail'),
+    path('aquarium/background/', AquariumBackgroundUpdateView.as_view(), name='aquarium-bg-update'),
+    path('aquarium/fishes/visibility/', AquariumFishVisibilityUpdateView.as_view(), name='aquarium-fish-visibility'),
+    
+    # --- 레포지토리 공용 수족관(피시탱크) 관리 ---
+    path('fishtank/<int:repo_id>/', FishtankDetailView.as_view(), name='fishtank-detail'),
+    path('fishtank/<int:repo_id>/background/', FishtankBackgroundUpdateView.as_view(), name='fishtank-bg-update'),
+    path('fishtank/<int:repo_id>/fishes/visibility/', FishtankFishVisibilityUpdateView.as_view(), name='fishtank-fish-visibility'),
 
-    path("aquarium/", AquariumDetailView.as_view()),
-    path("my-fishes/", MyUnlockedFishListView.as_view()),
-    #path("aquarium/add-fish/", AquariumAddFishView.as_view()),
-    #path("aquarium/remove-fish/<int:fish_id>/", AquariumRemoveFishView.as_view()),
-    path("aquarium/backgrounds/", AquariumBackgroundListView.as_view()),
-    path("aquarium/apply-background/", AquariumApplyBackgroundView.as_view()),
-    #path("aquarium/export/", AquariumExportView.as_view()),
-    path("aquarium/svg/", AquariumSVGView.as_view()),
-    path("aquarium/sprites/", AquariumSpriteListView.as_view(), name="aquarium-sprites"),
-    path("aquarium/apply-fish/", AquariumSelectableFishView.as_view()),
-    path("aquarium/export-selection/", AquariumExportSelectionView.as_view()),
+    # --- 유저 인벤토리(보유 자산) 조회 ---
+    path('my-fishes/', UserContributionFishListView.as_view(), name='user-fish-list'),
+    path('my-backgrounds/', UserOwnBackgroundListView.as_view(), name='user-backgrounds-list'),
 ]
