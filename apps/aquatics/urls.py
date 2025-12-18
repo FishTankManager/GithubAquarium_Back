@@ -5,7 +5,7 @@ from .views_fishtank import (
     FishtankSVGView,
     FishtankBackgroundListView,
     ApplyFishtankBackgroundView,
-    FishtankExportView,
+    #FishtankExportView,
     FishtankSelectableFishView,
     FishtankExportSelectionView,
     FishtankSpriteListView,
@@ -23,7 +23,7 @@ urlpatterns = [
     path("fishtank/<int:repo_id>/sprites/", FishtankSpriteListView.as_view(), name="fishtank-sprites"),
 
     path("aquarium/", AquariumDetailView.as_view()),
-    path("aquarium/my-fishes/", MyUnlockedFishListView.as_view()),
+    path("my-fishes/", MyUnlockedFishListView.as_view()),
     #path("aquarium/add-fish/", AquariumAddFishView.as_view()),
     #path("aquarium/remove-fish/<int:fish_id>/", AquariumRemoveFishView.as_view()),
     path("aquarium/backgrounds/", AquariumBackgroundListView.as_view()),

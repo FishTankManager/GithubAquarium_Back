@@ -17,6 +17,7 @@ class AquariumFishSerializer(serializers.ModelSerializer):
             "repository",
             "my_commit_count",
             "unlocked_at",
+            "is_visible_in_aquarium",
         ]
 
     def get_species(self, obj):
@@ -27,6 +28,7 @@ class AquariumFishSerializer(serializers.ModelSerializer):
             "maturity": s.maturity,
             "required_commits": s.required_commits,
             "svg_template": s.svg_template,
+            "group_code": s.group_code,
         }
 
     def get_repository(self, obj):

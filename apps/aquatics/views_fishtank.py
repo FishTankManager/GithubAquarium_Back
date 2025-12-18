@@ -10,7 +10,9 @@ from apps.repositories.models import Repository
 from apps.aquatics.models import Fishtank, FishtankSetting, OwnBackground,ContributionFish
 from apps.aquatics.serializers_fishtank import (
     FishtankDetailSerializer,
-    FishtankBackgroundSerializer,
+)
+from apps.aquatics.serializers_aquarium import (
+    AquariumBackgroundSerializer,
 )
 from apps.aquatics.renderer.tank import render_fishtank_svg
 # ----------------------------------------------------------
@@ -69,12 +71,12 @@ class FishtankBackgroundListView(APIView):
     @swagger_auto_schema(
         operation_summary="피쉬탱크 배경 목록 조회",
         operation_description="유저가 보유한 배경(OwnBackground)의 원본 Background 데이터를 반환합니다.",
-        responses={200: FishtankBackgroundSerializer(many=True)}
+        responses={200: AquariumBackgroundSerializer(many=True)}
     )
     def get(self, request):
         owned = OwnBackground.objects.filter(user=request.user)
         backgrounds = [ob.background for ob in owned]
-        serializer = FishtankBackgroundSerializer(backgrounds, many=True)
+        serializer = AquariumBackgroundSerializer(backgrounds, many=True)
         return Response(serializer.data, status=200)
 
 

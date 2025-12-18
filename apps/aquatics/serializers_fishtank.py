@@ -48,8 +48,3 @@ class FishtankDetailSerializer(serializers.ModelSerializer):
         model = Fishtank
         fields = ["id", "repository", "svg_path", "contributors"]
 
-
-class FishtankBackgroundSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Background
-        fields = ["id", "name", "code", "background_image"]
