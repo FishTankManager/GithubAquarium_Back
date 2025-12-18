@@ -83,3 +83,32 @@ class Background(models.Model):
 
     def __str__(self):
         return self.name
+
+class Item(models.Model):
+    class ItemType(models.TextChoices):
+        REROLL_TICKET = 'REROLL', 'Re-roll Ticket'       # 물고기 리롤권
+        BG_UNLOCK = 'BG_UNLOCK', 'Background Unlock'     # 배경 해금권
+
+    code = models.CharField(max_length=50, unique=True, help_text="아이템 식별 코드 (예: TICKET_REROLL)")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    item_type = models.CharField(max_length=20, choices=ItemType.choices)
+    
+    # 가격 정보 (MVP 단계에서는 변동 가격 등 복잡한 로직 없이 고정 가격 사용)
+    price = models.PositiveIntegerField(default=10, help_text="구매 가격 (Points)")
+    
+    # 배경 해금권일 경우, 어떤 배경을 해금하는지 연결
+    # 리롤권이라면 이 필드는 비워둠 (Null)
+    target_background = models.ForeignKey(
+        Background, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="배경 해금권일 경우 연결된 배경 객체"
+    )
+
+    image = models.ImageField(upload_to='items/', null=True, blank=True)
+    is_active = models.BooleanField(default=True, help_text="상점 노출 여부")
+
+    def __str__(self):
+        return f"[{self.item_type}] {self.name} ({self.price}P)"

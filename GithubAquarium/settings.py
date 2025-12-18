@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'apps.repositories',
     'apps.items',
     'apps.aquatics',
+    'apps.shop',
 
     # Development tools
     'django_extensions',
