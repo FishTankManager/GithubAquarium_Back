@@ -75,8 +75,8 @@ class FishtankBackgroundListView(APIView):
     )
     def get(self, request):
         owned = OwnBackground.objects.filter(user=request.user)
-        backgrounds = [ob.background for ob in owned]
-        serializer = AquariumBackgroundSerializer(backgrounds, many=True)
+        # AquariumBackgroundSerializer는 OwnBackground를 직렬화하므로 owned를 직접 사용
+        serializer = AquariumBackgroundSerializer(owned, many=True)
         return Response(serializer.data, status=200)
 
 

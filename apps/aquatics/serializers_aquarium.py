@@ -1,6 +1,7 @@
 #aqutatics/serializers_aquarium.py
 from rest_framework import serializers
 from apps.aquatics.models import Aquarium, ContributionFish, OwnBackground
+from apps.items.models import Background
 
 
 class AquariumFishSerializer(serializers.ModelSerializer):
@@ -67,7 +68,16 @@ class AquariumDetailSerializer(serializers.ModelSerializer):
         return None
 
 
+class BackgroundSerializerForAquarium(serializers.ModelSerializer):
+    """Background 모델을 직렬화하는 nested serializer"""
+    class Meta:
+        model = Background
+        fields = ["id", "name", "code"]  # Background 모델에는 svg_template이 없음
+
+
 class AquariumBackgroundSerializer(serializers.ModelSerializer):
+    background = BackgroundSerializerForAquarium(read_only=True)
+    
     class Meta:
         model = OwnBackground
         fields = ["id", "background", "unlocked_at"]
