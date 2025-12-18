@@ -79,12 +79,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github', # GitHub social login
     'drf_yasg', # API documentation (Swagger)
     'corsheaders', # Cross-Origin Resource Sharing
+    'django_q',  # task queue
 
     # Your custom apps
     'apps.users',
     'apps.repositories',
     'apps.items',
     'apps.aquatics',
+    'apps.shop',
 
     # Development tools
     'django_extensions',
@@ -339,4 +341,14 @@ SWAGGER_SETTINGS = {
     'SECURITY_REQUIRMENTS': [
         {'Bearer': []},
     ],
+}
+
+# --- Django Q Configuration ---
+Q_CLUSTER = {
+    'name': 'GithubAquarium',
+    'workers': 4,
+    'recycle': 500,
+    'timeout': 6000,  # sec
+    'retry': 36000,
+    'orm': 'default', # temporary use ORM as broker
 }

@@ -49,6 +49,15 @@ class Repository(models.Model):
         related_name='owned_repositories'
     )
 
+    # Additional fields for synchronization status
+    default_branch = models.CharField(max_length=100, default='main')
+
+    # latest synced commit hash
+    last_synced_hash = models.CharField(max_length=40, null=True, blank=True)
+
+    # by webhook
+    dirty_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return self.full_name
 
