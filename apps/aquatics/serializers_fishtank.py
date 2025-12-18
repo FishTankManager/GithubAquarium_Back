@@ -28,6 +28,7 @@ class ContributionFishSerializer(serializers.ModelSerializer):
             "maturity": s.maturity,
             "required_commits": s.required_commits,
             "svg_template": s.svg_template,
+            "group_code": s.group_code,
         }
 
 
@@ -48,3 +49,8 @@ class FishtankDetailSerializer(serializers.ModelSerializer):
         model = Fishtank
         fields = ["id", "repository", "svg_path", "contributors"]
 
+
+class FishtankBackgroundSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Background
+        fields = ["id", "name", "code", "background_image"]
