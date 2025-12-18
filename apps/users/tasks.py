@@ -5,6 +5,9 @@ from django.db import transaction
 from django.utils import timezone
 from github import Github, GithubException
 from apps.repositories.models import Repository, Contributor, Commit
+from apps.shop.models import UserCurrency, PointLog
+
+COMMIT_REWARD_PER_POINT = 10  # 1 커밋당 지급할 포인트
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -93,16 +96,54 @@ def _sync_contributors(repository_model: Repository, repo_obj):
         existing_users = User.objects.filter(github_id__in=contributor_github_ids)
         user_map = {user.github_id: user for user in existing_users}
 
-        for contributor in contributors_from_api:
-            if contributor.id in user_map:
-                user_obj = user_map[contributor.id]
-                Contributor.objects.update_or_create(
+        for api_contributor in contributors_from_api:
+            if api_contributor.id in user_map:
+                user_obj = user_map[api_contributor.id]
+                new_count = api_contributor.contributions
+                
+                # 1. Contributor 객체 가져오기 (없으면 생성, 초기값 0)
+                contributor, created = Contributor.objects.get_or_create(
                     repository=repository_model,
                     user=user_obj,
-                    defaults={'commit_count': contributor.contributions}
+                    defaults={'commit_count': 0} # 생성 시점에는 0으로 두고 아래에서 업데이트
                 )
+
+                # 2. 커밋 증가분 계산
+                # (API에서 가져온 값이 DB 값보다 클 때만 보상 지급 - 커밋 삭제 등 예외 상황 방어)
+                if new_count > contributor.commit_count:
+                    diff = new_count - contributor.commit_count
+                    
+                    # 생성된 직후(created=True)라면 diff는 new_count 그 자체임
+                    # 만약 '최초 가입 시 과거 커밋에 대한 보상을 줄 것인가?' -> MVP에서는 준다고 가정
+                    # 안 주려면 if not created 조건을 걸어야 함. 여기서는 "주는" 방향으로 구현.
+                    
+                    reward_amount = diff * COMMIT_REWARD_PER_POINT
+                    
+                    if reward_amount > 0:
+                        # 3. 재화 지급 (Atomic하게 처리 권장되나 Task 내부이므로 순차처리 가정)
+                        currency, _ = UserCurrency.objects.get_or_create(user=user_obj)
+                        currency.balance += reward_amount
+                        currency.total_earned += reward_amount
+                        currency.save()
+                        
+                        # 4. 로그 기록
+                        PointLog.objects.create(
+                            user=user_obj,
+                            amount=reward_amount,
+                            reason=PointLog.Reason.COMMIT_REWARD,
+                            description=f"{repository_model.name}: +{diff} commits"
+                        )
+                        
+                        logger.info(f"Rewarded {user_obj.username} {reward_amount} points for {diff} new commits.")
+
+                # 5. 최신 커밋 카운트 반영
+                if contributor.commit_count != new_count:
+                    contributor.commit_count = new_count
+                    contributor.save(update_fields=['commit_count'])
+
     except GithubException as e:
         logger.warning(f"Could not get contributors for {repo_obj.full_name}: {e}")
+
 
 def _sync_commits(repository_model: Repository, repo_obj):
     """
