@@ -120,6 +120,7 @@ class UserFishListSerializer(serializers.ModelSerializer):
     """유저가 획득한 모든 물고기 목록 (인벤토리용)"""
     species_name = serializers.CharField(source='fish_species.name', read_only=True)
     repository_full_name = serializers.CharField(source='contributor.repository.full_name', read_only=True)
+    group_code = serializers.CharField(source='fish_species.group_code', read_only=True) # 추가 필요
     maturity = serializers.IntegerField(source='fish_species.maturity', read_only=True)
 
     class Meta:
