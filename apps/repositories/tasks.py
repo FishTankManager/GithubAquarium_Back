@@ -4,7 +4,7 @@ from datetime import datetime
 from dateutil.parser import parse as parse_datetime
 from django.utils import timezone
 from django.utils.timezone import make_aware, is_naive
-from django.db.models import F, Q
+from django.db.models import Q
 from apps.repositories.models import Repository, Commit, Contributor
 from apps.users.models import User
 
@@ -138,7 +138,7 @@ def _handle_push_event(payload):
     if not commits:
         return
 
-    # [수정/최적화] Bulk 처리를 위해 관련된 유저들을 미리 조회 (username OR email)
+    # Bulk 처리를 위해 관련된 유저들을 미리 조회 (username OR email)
     author_usernames = set()
     author_emails = set()
 
@@ -151,14 +151,12 @@ def _handle_push_event(payload):
                 author_emails.add(author['email'])
     
     # DB에 존재하는 유저만 매핑 (Shell User 생성 안함)
-    # Q 객체를 사용하여 username 또는 email 중 하나라도 일치하면 조회
     query_filter = Q()
     if author_usernames:
         query_filter |= Q(github_username__in=author_usernames)
     if author_emails:
         query_filter |= Q(email__in=author_emails)
 
-    # 쿼리 수행
     existing_users = User.objects.filter(query_filter)
     
     # 빠른 조회를 위한 매핑 테이블 생성
@@ -188,15 +186,15 @@ def _handle_push_event(payload):
             }
         )
 
-        # 4-2. Contributor 업데이트 (중요: 리스트 뷰 즉시 반영을 위해)
+        # 4-2. Contributor 존재 확인 (수정: 여기서 카운트를 증가시키지 않음)
         if commit_author:
-            contributor, _ = Contributor.objects.get_or_create(
+            Contributor.objects.get_or_create(
                 repository=repository,
                 user=commit_author,
                 defaults={'commit_count': 0}
             )
-            # F 객체를 사용하여 Race Condition 최소화하며 카운트 증가
-            contributor.commit_count = F('commit_count') + 1
-            contributor.save()
+            # [Fix] Webhook에서는 카운트를 올리지 않습니다.
+            # 카운트 집계와 보상 지급은 Sync Task(API 기반)가 수행하여
+            # (API값 - DB값)의 차이만큼 정확히 보상하도록 합니다.
 
     logger.info(f"Processed push event for {repository.full_name} (Marked dirty at {repository.dirty_at})")
