@@ -12,6 +12,7 @@ git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > allco
 
 uv run python manage.py init_items # 커스텀
 uv run python manage.py createsuperuser # 관리자 페이지용
+uv run ./manage.py qcluster # worker 로컬 작동
 
 # .env 예시 format
 DEBUG=''

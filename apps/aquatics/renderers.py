@@ -1,6 +1,8 @@
+# apps/aquatics/renderers.py
 import random
 import re
 import logging
+from django.conf import settings
 from apps.aquatics.models import Aquarium, ContributionFish, Fishtank
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,27 @@ def _apply_sprite_id(svg_template: str, fish_id: int) -> str:
     if not svg_template:
         return ""
     return svg_template.replace("*{id}", str(fish_id))
+
+
+def _get_absolute_url(relative_path: str) -> str:
+    """
+    상대 경로(예: /media/bg.png)를 입력받아
+    settings.SITE_DOMAIN을 결합한 절대 경로를 반환합니다.
+    Github Readme 등 외부에서 이미지가 깨지지 않도록 하기 위함입니다.
+    """
+    if not relative_path:
+        return ""
+    if relative_path.startswith('http'):
+        return relative_path
+    
+    # settings.py에 SITE_DOMAIN이 정의되어 있어야 함 (기본값 localhost)
+    domain = getattr(settings, 'SITE_DOMAIN', 'http://localhost:8000')
+    
+    # 경로가 /로 시작하지 않으면 붙여줌
+    if not relative_path.startswith('/'):
+        relative_path = f'/{relative_path}'
+        
+    return f"{domain}{relative_path}"
 
 
 # --- Sprite Renderer ---
@@ -148,11 +171,8 @@ def render_aquarium_svg(user, width=512, height=512):
 
     bg_url = ""
     if aquarium.background and aquarium.background.background.background_image:
-        bg_url = aquarium.background.background.background_image.url
-        # 외부 참조를 위해 절대 경로가 필요한 경우 처리
-        if not bg_url.startswith('http'):
-             # 실제 환경에 맞게 도메인 결합 로직 필요 (여기선 상대경로 유지)
-             pass
+        raw_url = aquarium.background.background.background_image.url
+        bg_url = _get_absolute_url(raw_url)
 
     fishes = ContributionFish.objects.filter(
         aquarium=aquarium,
@@ -177,21 +197,25 @@ def render_aquarium_svg(user, width=512, height=512):
     </svg>"""
 
 
-def render_fishtank_svg(repository, width=512, height=512):
+def render_fishtank_svg(repository, user, width=512, height=512):
     """
-    레포지토리 공용 피시탱크 전체를 SVG로 렌더링합니다.
+    레포지토리 공용 피시탱크를 특정 유저의 배경 설정에 맞춰 렌더링합니다.
     """
     try:
-        fishtank = Fishtank.objects.get(repository=repository)
+        # 해당 유저의 피시탱크 설정 조회
+        fishtank = Fishtank.objects.select_related('background__background').get(
+            repository=repository, 
+            user=user
+        )
+        bg_url = ""
+        if fishtank.background and fishtank.background.background.background_image:
+            raw_url = fishtank.background.background.background_image.url
+            bg_url = _get_absolute_url(raw_url)
+
     except Fishtank.DoesNotExist:
-        return ""
+        bg_url = ""
 
-    # 피시탱크 배경은 첫 번째 기여자의 설정을 우선으로 하거나 기본값 사용
-    setting = fishtank.settings.select_related("background__background").first()
-    bg_url = ""
-    if setting and setting.background and setting.background.background.background_image:
-        bg_url = setting.background.background.background_image.url
-
+    # 물고기들은 해당 레포지토리의 모든 기여자들 것을 가져옴
     fishes = ContributionFish.objects.filter(
         contributor__repository=repository,
         is_visible_in_fishtank=True

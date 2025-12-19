@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.conf import settings
-from .models import Aquarium, Fishtank, ContributionFish, UnlockedFish, OwnBackground, FishtankSetting
+from .models import Aquarium, Fishtank, ContributionFish, UnlockedFish, OwnBackground
 from drf_yasg.utils import swagger_serializer_method
 
 class FishSerializer(serializers.ModelSerializer):
@@ -24,7 +24,6 @@ class FishSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return None
-        # 현재 로그인한 유저가 이 종을 언제 해금했는지 조회
         unlocked_record = UnlockedFish.objects.filter(user=request.user, fish_species=obj.fish_species).first()
         return unlocked_record.unlocked_at if unlocked_record else None
 
@@ -43,7 +42,6 @@ class AquariumDetailSerializer(serializers.ModelSerializer):
         if not obj.svg_path:
             return None
         request = self.context.get('request')
-        # 파일 경로 뒤에 ?t=타임스탬프 추가
         timestamp = int(obj.updated_at.timestamp())
         full_path = f"{settings.MEDIA_URL}{obj.svg_path}?t={timestamp}"
         return request.build_absolute_uri(full_path) if request else full_path
@@ -69,22 +67,20 @@ class FishtankDetailSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(full_path) if request else full_path
 
     def get_background_name(self, obj):
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return "기본 배경"
-        setting = FishtankSetting.objects.filter(fishtank=obj, contributor=request.user).first()
-        return setting.background.background.name if setting and setting.background else "기본 배경"
+        # [통합 모델 반영] Fishtank 모델이 직접 OwnBackground를 가짐
+        if obj.background and obj.background.background:
+            return obj.background.background.name
+        return "기본 배경"
 
     @swagger_serializer_method(serializer_or_field=FishSerializer(many=True))
     def get_fish_list(self, obj):
+        # 피시탱크는 유저별 개별 뷰이지만, 내용은 해당 레포의 모든 기여자를 포함
         fishes = ContributionFish.objects.filter(
             contributor__repository=obj.repository,
             is_visible_in_fishtank=True
         ).select_related('fish_species', 'contributor__repository', 'contributor__user')
         return FishSerializer(fishes, many=True, context=self.context).data
 
-
-# --- 조작 및 인벤토리 관련 Serializers ---
 
 class BackgroundChangeSerializer(serializers.Serializer):
     background_id = serializers.IntegerField(help_text="적용할 배경(Background 모델)의 고유 ID")
@@ -120,12 +116,18 @@ class UserFishListSerializer(serializers.ModelSerializer):
     """유저가 획득한 모든 물고기 목록 (인벤토리용)"""
     species_name = serializers.CharField(source='fish_species.name', read_only=True)
     repository_full_name = serializers.CharField(source='contributor.repository.full_name', read_only=True)
-    group_code = serializers.CharField(source='fish_species.group_code', read_only=True) # 추가 필요
+    group_code = serializers.CharField(source='fish_species.group_code', read_only=True)
     maturity = serializers.IntegerField(source='fish_species.maturity', read_only=True)
 
     class Meta:
         model = ContributionFish
         fields = [
-            'id', 'species_name', 'maturity', 'repository_full_name', 
-            'is_visible_in_fishtank', 'is_visible_in_aquarium', 'aquarium'
+            'id', 
+            'species_name', 
+            'group_code',  # ✅ 여기에 추가하세요
+            'maturity', 
+            'repository_full_name', 
+            'is_visible_in_fishtank', 
+            'is_visible_in_aquarium', 
+            'aquarium'
         ]

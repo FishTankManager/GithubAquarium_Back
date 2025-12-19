@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UnlockedFish, OwnBackground, Aquarium, Fishtank, ContributionFish, FishtankSetting
+from .models import UnlockedFish, OwnBackground, Aquarium, Fishtank, ContributionFish
 
 @admin.register(UnlockedFish)
 class UnlockedFishAdmin(admin.ModelAdmin):
@@ -39,7 +39,3 @@ class ContributionFishAdmin(admin.ModelAdmin):
     def get_repo(self, obj):
         return obj.contributor.repository.name
     get_repo.short_description = 'Repository'
-
-@admin.register(FishtankSetting)
-class FishtankSettingAdmin(admin.ModelAdmin):
-    list_display = ('fishtank', 'contributor', 'background')

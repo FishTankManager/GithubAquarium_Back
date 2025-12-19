@@ -86,23 +86,39 @@ class Aquarium(models.Model):
 
 class Fishtank(models.Model):
     """
-    Represents a shared fishtank for a single repository.
-    It contains fish representing each contributor.
+    특정 레포지토리에 대한 '개별 유저의 뷰'를 담당하는 수족관입니다.
+    유저마다 같은 레포지토리를 서로 다른 배경으로 볼 수 있습니다.
     """
-    repository = models.OneToOneField(
+    repository = models.ForeignKey(
         Repository, 
         on_delete=models.CASCADE, 
-        related_name='fishtank'
+        related_name='fishtanks'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='fishtanks'
+    )
+    background = models.ForeignKey(
+        OwnBackground, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="이 수족관 뷰에 대해 유저가 설정한 배경입니다."
     )
     svg_path = models.CharField(
         max_length=512, 
         blank=True,
-        help_text="The relative path to the generated SVG file."
+        help_text="유저의 설정이 반영되어 생성된 SVG 파일 경로."
     )
-    updated_at = models.DateTimeField(auto_now=True) # 추가
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('repository', 'user')
 
     def __str__(self):
-        return f"Fishtank for {self.repository.name}"
+        return f"{self.user.username}'s view of {self.repository.name}"
+    
 
 class ContributionFish(models.Model):
     """
@@ -140,31 +156,3 @@ class ContributionFish(models.Model):
         if self.aquarium:
             return f"Fish for {self.contributor.user.username} in {self.contributor.repository.name}'s Fishtank (in {self.aquarium})"
         return f"Fish for {self.contributor.user.username} in {self.contributor.repository.name}'s Fishtank"
-
-
-class FishtankSetting(models.Model):
-    """
-    Stores a contributor's chosen background for a specific Fishtank.
-    """
-    fishtank = models.ForeignKey(
-        Fishtank, 
-        on_delete=models.CASCADE, 
-        related_name='settings'
-    )
-    contributor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-    )
-    background = models.ForeignKey(
-        OwnBackground, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
-        help_text="The background chosen by the contributor for this fishtank."
-    )
-
-    class Meta:
-        unique_together = ('fishtank', 'contributor')
-
-    def __str__(self):
-        return f"Setting by {self.contributor.username} for {self.fishtank}"

@@ -2,6 +2,7 @@
 import logging
 from apps.items.models import FishSpecies
 from apps.aquatics.models import ContributionFish, UnlockedFish
+from django.conf import settings 
 
 logger = logging.getLogger(__name__)
 
@@ -11,13 +12,13 @@ def update_or_create_contribution_fish(contributor):
     """
     commit_count = contributor.commit_count
     
-    # 현재 기여자가 가진 물고기의 group_code를 확인 (없으면 기본 그룹 'C-KRAKEN' 등 할당)
     try:
         current_fish = contributor.contribution_fish
         group_code = current_fish.fish_species.group_code
     except:
         current_fish = None
-        group_code = "ShrimpWich" # 초기 기본 물고기 그룹
+        # settings에 정의된 상수를 사용 (방안 A)
+        group_code = getattr(settings, "DEFAULT_FISH_GROUP", "ShrimpWich")
 
     # 1. 커밋 수에 맞는 가장 높은 단계의 물고기 조회
     target_species = FishSpecies.objects.filter(

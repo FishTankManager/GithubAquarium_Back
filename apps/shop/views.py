@@ -80,21 +80,15 @@ class PurchaseItemView(APIView):
         item_id = serializer.validated_data['item_id']
         user = request.user
 
-        # 1. 아이템 확인
         item = get_object_or_404(Item, id=item_id, is_active=True)
+
+        # [방안 B] 트랜잭션 외부에서 먼저 레코드를 확보하여 Race Condition 방지
+        currency_pre, _ = UserCurrency.objects.get_or_create(user=user)
 
         try:
             with transaction.atomic():
-                # 2. 유저 지갑 잠금 (Row Lock) - 동시성 제어
-                # 없는 경우 생성 (get_or_create는 atomic 블록 안에서 select_for_update와 함께 쓰기 까다로우므로 예외처리)
-                try:
-                    currency = UserCurrency.objects.select_for_update().get(user=user)
-                except UserCurrency.DoesNotExist:
-                    currency = UserCurrency.objects.create(user=user)
-                    # 다시 잠금 획득
-                    currency = UserCurrency.objects.select_for_update().get(user=user)
+                currency = UserCurrency.objects.select_for_update().get(id=currency_pre.id)
 
-                # 3. 잔액 확인
                 if currency.balance < item.price:
                     return Response(
                         {"detail": "잔액이 부족합니다.", "current_balance": currency.balance}, 
