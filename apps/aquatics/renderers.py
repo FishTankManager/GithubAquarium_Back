@@ -267,13 +267,13 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
         <!-- 라벨은 "스프라이트 픽셀 좌표"에 붙임 -->
         <text class="label-top"
               x="{top_px}"
-              y="{top_py +104}"
+              y="{top_py +64}"
               text-anchor="middle"
               dominant-baseline="ideographic">{top_label}</text>
 
         <text class="label-bottom"
               x="{bot_px}"
-              y="{bot_py }"
+              y="{bot_py-46}"
               text-anchor="middle"
               dominant-baseline="hanging">{bottom_label}</text>
       </g>
