@@ -4,6 +4,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 필요한 명령어
 uv run manage.py collectstatic
 uv run manage.py migrate
+sqlite3 db.sqlite3 "PRAGMA journal_mode=WAL;" # sudo apt install sqlite3 필요
 uv run manage.py graph_models -a -o erd.png
 uv run manage.py show_urls
 uv run ruff check . --fix
