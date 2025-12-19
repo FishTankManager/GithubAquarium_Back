@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # --- Utilities ---
 
-FONT_FAMILY = '"Bungee", "Space Mono", monospace'
+FONT_FAMILY = 'Menlo'
 
 def _strip_outer_svg(svg_text: str) -> str:
     """
@@ -267,13 +267,13 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
         <!-- 라벨은 "스프라이트 픽셀 좌표"에 붙임 -->
         <text class="label-top"
               x="{top_px}"
-              y="{top_py - 6}"
+              y="{top_py +104}"
               text-anchor="middle"
               dominant-baseline="ideographic">{top_label}</text>
 
         <text class="label-bottom"
               x="{bot_px}"
-              y="{bot_py - 110}"
+              y="{bot_py }"
               text-anchor="middle"
               dominant-baseline="hanging">{bottom_label}</text>
       </g>
