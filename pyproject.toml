@@ -3,7 +3,7 @@ name = "githubaquarium-back"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 dependencies = [
     "dj-rest-auth[with-social]>=6.0.0",
     "django-allauth[socialaccount]<0.61.0",
