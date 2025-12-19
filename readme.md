@@ -1,15 +1,21 @@
 # uv 설치
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 도움 되는 명령어
-uv run ruff check . --fix
+# 필요한 명령어
+uv run manage.py collectstatic
+uv run manage.py migrate
+sqlite3 db.sqlite3 "PRAGMA journal_mode=WAL;" # sudo apt install sqlite3 필요
 uv run manage.py graph_models -a -o erd.png
 uv run manage.py show_urls
-uv run manage.py migrate
-uv run manage.py collectstatic
-git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > all.txt
+uv run ruff check . --fix
+tree -L 4 -I ".venv|__pycache__|.ruff_cache|staticfiles_collected|logs" > structure.txt
+git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > allcode.txt
 
-.env 예시 format
+uv run python manage.py init_items # 커스텀
+uv run python manage.py createsuperuser # 관리자 페이지용
+uv run ./manage.py qcluster # worker 로컬 작동
+
+# .env 예시 format
 DEBUG=''
 SECRET_KEY=''
 

@@ -1,7 +1,6 @@
 from django.urls import path
-from .views import RepositoryListView
-app_name = 'repositories'
+from .views import MyContributedRepositoryListView
 
 urlpatterns = [
-    path("", RepositoryListView.as_view(), name="repository-list"),
+    path('', MyContributedRepositoryListView.as_view(), name='my-repository-list'),
 ]

@@ -1,58 +1,38 @@
-# apps/repositories/serializers.py
 from rest_framework import serializers
-from .models import Repository, Contributor, Commit
+from .models import Repository
+from apps.users.serializers import UserSerializer
 
-class RepositorySerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Repository model.
-    Converts Repository instances to JSON, including all fields.
-    역참조 관계(contributors, commits)는 제외하여 순환 참조를 방지합니다.
-    """
+class RepositoryListSerializer(serializers.ModelSerializer):
+    # owner 필드에 UserSerializer를 중첩하여 ID뿐만 아니라 이름, 아바타 등 전체 정보를 반환
+    owner = UserSerializer(read_only=True)
+    
+    # 로그인한 유저의 개인 기여도 필드 추가
+    my_commit_count = serializers.SerializerMethodField(help_text="현재 로그인한 사용자의 해당 레포지토리 커밋 수")
+
     class Meta:
         model = Repository
         fields = [
-            'id',
-            'github_id',
-            'name',
-            'full_name',
-            'description',
-            'html_url',
-            'stargazers_count',
-            'language',
-            'commit_count',
-            'created_at',
-            'updated_at',
-            'last_synced_at',
-            'owner',
+            'id', 
+            'github_id', 
+            'name', 
+            'full_name', 
+            'description', 
+            'html_url', 
+            'stargazers_count', 
+            'language', 
+            'commit_count',   # 레포지토리 전체 커밋 수
             'default_branch',
-            'last_synced_hash',
-            'dirty_at',
+            'created_at', 
+            'updated_at',
+            'owner',          # 소유자 정보 (Object)
+            'my_commit_count' # 내 기여도 (Integer)
         ]
 
-class ContributorSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Contributor model.
-    Includes related user information for read-only purposes.
-    """
-    github_username = serializers.CharField(source='user.github_username', read_only=True)
-    avatar_url = serializers.URLField(source='user.avatar_url', read_only=True)
-
-    class Meta:
-        model = Contributor
-        fields = [
-            'id',
-            'user',
-            'repository',
-            'commit_count',
-            'github_username',
-            'avatar_url'
-        ]
-
-class CommitSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Commit model.
-    Converts Commit instances to JSON, including all fields.
-    """
-    class Meta:
-        model = Commit
-        fields = '__all__'
+    def get_my_commit_count(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return 0
+        
+        # View에서 prefetch_related('contributors')를 사용하므로 메모리 내에서 조회하여 DB 부하 없음
+        contributor = next((c for c in obj.contributors.all() if c.user_id == user.id), None)
+        return contributor.commit_count if contributor else 0

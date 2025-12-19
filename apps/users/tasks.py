@@ -3,9 +3,11 @@ import logging
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
+from django_q.tasks import async_task
 from github import Github, GithubException
 from apps.repositories.models import Repository, Contributor, Commit
 from apps.shop.models import UserCurrency, PointLog
+from apps.aquatics.logic import update_or_create_contribution_fish
 
 COMMIT_REWARD_PER_POINT = 10  # 1 커밋당 지급할 포인트
 
@@ -160,19 +162,23 @@ def _sync_contributors(repository_model: Repository, repo_obj):
                 if diff > 0:
                     reward_amount = diff * COMMIT_REWARD_PER_POINT
                     
-                    # 재화 지급
-                    currency, _ = UserCurrency.objects.get_or_create(user=user_obj)
-                    currency.balance += reward_amount
-                    currency.total_earned += reward_amount
-                    currency.save()
-                    
-                    # 로그 기록
-                    PointLog.objects.create(
-                        user=user_obj,
-                        amount=reward_amount,
-                        reason=PointLog.Reason.COMMIT_REWARD,
-                        description=f"{repository_model.name}: +{diff} commits"
-                    )
+                    # [동시성 제어 적용] 지갑 레코드 확보 (없으면 생성)
+                    UserCurrency.objects.get_or_create(user=user_obj)
+
+                    with transaction.atomic():
+                        # Lock을 걸고 데이터를 가져와서 업데이트
+                        currency = UserCurrency.objects.select_for_update().get(user=user_obj)
+                        currency.balance += reward_amount
+                        currency.total_earned += reward_amount
+                        currency.save()
+                        
+                        # 로그 기록 (원자성을 위해 같은 트랜잭션 내에 위치)
+                        PointLog.objects.create(
+                            user=user_obj,
+                            amount=reward_amount,
+                            reason=PointLog.Reason.COMMIT_REWARD,
+                            description=f"{repository_model.name}: +{diff} commits"
+                        )
                     
                     logger.info(f"Rewarded {user_obj.username} {reward_amount} points for {diff} new commits in {repository_model.name}.")
 
@@ -180,6 +186,16 @@ def _sync_contributors(repository_model: Repository, repo_obj):
             if contributor.commit_count != new_count:
                 contributor.commit_count = new_count
                 contributor.save(update_fields=['commit_count'])
+                
+            # 물고기 진화/할당 로직 호출
+            contributor_model = Contributor.objects.get(repository=repository_model, user=user_obj)
+            update_or_create_contribution_fish(contributor_model)
+            
+            # 개인 아쿠아리움 SVG 갱신 예약
+            async_task('apps.aquatics.tasks.generate_aquarium_svg_task', user_obj.id)
+
+    # 해당 레포지토리 공용 수족관 SVG 갱신 예약
+    async_task('apps.aquatics.tasks.generate_fishtank_svg_task', repository_model.id)
 
 
 def _sync_commits(repository_model: Repository, repo_obj):

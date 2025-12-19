@@ -31,6 +31,15 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
+
+# --- Custom Service Settings ---
+# SVG 렌더링 시 이미지 절대 경로 생성을 위한 도메인 설정
+if DEBUG:
+    SITE_DOMAIN = 'http://localhost:8000'
+else:
+    # 실제 운영 도메인 (Nginx가 처리할 도메인)
+    SITE_DOMAIN = 'https://githubaquarium.store' 
+
 # Allowed hosts for the application
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'githubaquarium.store', 'www.githubaquarium.store']
 
@@ -136,6 +145,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # DB가 잠겨있으면 20초까지 대기하다가 풀리면 씁니다.
+            'timeout': 20, 
+        }
     }
 }
 
@@ -352,3 +365,8 @@ Q_CLUSTER = {
     'retry': 36000,
     'orm': 'default', # temporary use ORM as broker
 }
+
+# --- Game Logic Settings ---
+DEFAULT_FISH_GROUP = "ShrimpWich"
+
+RENDER_DOMAIN = "http://localhost:8000" if DEBUG else "https://githubaquarium.store"
