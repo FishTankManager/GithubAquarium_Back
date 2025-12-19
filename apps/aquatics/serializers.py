@@ -124,7 +124,7 @@ class UserFishListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 
             'species_name', 
-            'group_code',  # ✅ 여기에 추가하세요
+            'group_code',  
             'maturity', 
             'repository_full_name', 
             'is_visible_in_fishtank', 

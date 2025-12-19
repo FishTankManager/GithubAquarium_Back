@@ -8,6 +8,11 @@ from .views import (
     FishtankFishVisibilityUpdateView,
     UserContributionFishListView,
     UserOwnBackgroundListView,
+
+    #-- render 테스트---
+    AquariumSvgPreviewView,
+    FishtankSvgPreviewView,
+    #SvgLintView,
 )
 
 urlpatterns = [
@@ -24,4 +29,9 @@ urlpatterns = [
     # --- 유저 인벤토리(보유 자산) 조회 ---
     path('my-fishes/', UserContributionFishListView.as_view(), name='user-fish-list'),
     path('my-backgrounds/', UserOwnBackgroundListView.as_view(), name='user-backgrounds-list'),
+
+    # ---render---
+    path("aquarium/svg/preview/", AquariumSvgPreviewView.as_view()),
+    path("fishtank/<int:repo_id>/svg/preview/", FishtankSvgPreviewView.as_view()),
+    #path("svg/lint/", SvgLintView.as_view()),
 ]

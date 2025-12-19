@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.http import HttpResponse #렌더
+from .renderers import render_aquarium_svg , render_fishtank_svg #렌더
 
 from .models import Aquarium, Fishtank, OwnBackground, ContributionFish
 from apps.repositories.models import Repository
@@ -19,6 +21,8 @@ from .serializers import (
     FishVisibilityBulkUpdateSerializer
 )
 
+import logging
+logger = logging.getLogger(__name__)
 # --- 개인 아쿠아리움 관련 ---
 
 class AquariumDetailView(generics.RetrieveAPIView):
@@ -206,3 +210,47 @@ class AquariumFishVisibilityUpdateView(APIView):
         async_task('apps.aquatics.tasks.generate_aquarium_svg_task', request.user.id)
 
         return Response({"detail": "아쿠아리움 물고기 배치가 완료되었습니다."})
+    
+
+
+# --- render 테스트용 뷰 ---
+class AquariumSvgPreviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="(DEBUG) 내 아쿠아리움 SVG 프리뷰 (저장 없이 즉시 반환)",
+        manual_parameters=[
+            openapi.Parameter("as_text", openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN,
+                              description="true면 JSON으로 svg 문자열 반환, false면 image/svg+xml로 반환", default=False),
+        ],
+        responses={200: "SVG or JSON"}
+    )
+    def get(self, request):
+        
+        svg = render_aquarium_svg(request.user)
+        
+
+        logger.warning(f"[PREVIEW] svg_type={type(svg)} svg_len={(len(svg) if svg else 0)}")
+
+        if request.query_params.get("as_text") in ["1", "true", "True"]:
+            return Response({"svg": svg})
+        return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+
+
+class FishtankSvgPreviewView(APIView):
+    permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(
+        operation_summary="(DEBUG) 특정 repo의 피시탱크 SVG 프리뷰 (저장 없이 즉시 반환)",
+        manual_parameters=[
+            openapi.Parameter("as_text", openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN,
+                              description="true면 JSON으로 svg 문자열 반환, false면 image/svg+xml로 반환", default=False),
+        ],
+        responses={200: "SVG or JSON"}
+    )
+    def get(self, request, repo_id: int):
+        repo = Repository.objects.get(id=repo_id)
+        svg = render_fishtank_svg(repo, request.user)
+        if request.query_params.get("as_text") in ["1", "true", "True"]:
+            return Response({"svg": svg})
+
+        return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
