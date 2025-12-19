@@ -263,7 +263,8 @@ class AquariumSvgPreviewView(APIView):
             openapi.Parameter("as_text", openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN,
                               description="true면 JSON으로 svg 문자열 반환, false면 image/svg+xml로 반환", default=False),
         ],
-        responses={200: "SVG or JSON"}
+        responses={200: "SVG or JSON"},
+        tags=["SVG Preview"],
     )
     def get(self, request):
         
@@ -285,6 +286,7 @@ class FishtankSvgPreviewView(APIView):
             openapi.Parameter("as_text", openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN,
                               description="true면 JSON으로 svg 문자열 반환, false면 image/svg+xml로 반환", default=False),
         ],
+        tags=["SVG Preview"],
         responses={200: "SVG or JSON"}
     )
     def get(self, request, repo_id: int):
