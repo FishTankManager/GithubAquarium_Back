@@ -152,7 +152,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
 
     # 프론트: baseW = tankW * (percent/100), spriteW = baseW*2
     baseW = tank_w * (persona_width_percent / 100.0)
-    spriteW = baseW * 6.0
+    spriteW = baseW * 5.5
     scale = spriteW / max(1e-6, vb_w)
     spriteH = vb_h * scale
 
@@ -273,7 +273,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
 
         <text class="label-bottom"
               x="{bot_px}"
-              y="{bot_py-46}"
+              y="{bot_py-56}"
               text-anchor="middle"
               dominant-baseline="hanging">{bottom_label}</text>
       </g>
