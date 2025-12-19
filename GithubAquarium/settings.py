@@ -145,6 +145,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # DB가 잠겨있으면 20초까지 대기하다가 풀리면 씁니다.
+            'timeout': 20, 
+        }
     }
 }
 
