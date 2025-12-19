@@ -160,7 +160,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
     minX = padding
     maxX = max(padding, tank_w - padding - spriteW)
     minY = padding
-    maxY = max(padding, tank_h - padding - spriteH)
+    maxY = max(padding, tank_h - padding - spriteH*(0.7))
 
     # ---- movement points (밖으로 안 나가게!) ----
     x0 = random.uniform(minX, maxX)
@@ -242,20 +242,16 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
         #fish-{fish_id} .label-top {{
           font-family: {FONT_FAMILY};
           font-size: {topFont}px;
-          font-weight: 700;
-          fill: white;
-          paint-order: stroke;
-          stroke: rgba(0,0,0,0.75);
-          stroke-width: 2px;
+          font-weight: 900;
+          fill: #000;
+          paint-order: none;
         }}
         #fish-{fish_id} .label-bottom {{
           font-family: {FONT_FAMILY};
           font-size: {botFont}px;
-          font-weight: 400;
-          fill: white;
-          paint-order: stroke;
-          stroke: rgba(0,0,0,0.75);
-          stroke-width: 2px;
+          font-weight: 900;
+          fill: #000;
+          paint-order: none;
         }}
       </style>
 
@@ -277,7 +273,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
 
         <text class="label-bottom"
               x="{bot_px}"
-              y="{bot_py - 80}"
+              y="{bot_py - 110}"
               text-anchor="middle"
               dominant-baseline="hanging">{bottom_label}</text>
       </g>
@@ -287,7 +283,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
 
 # --- Main Renderers ---
 
-def render_aquarium_svg(user, width=512, height=512):
+def render_aquarium_svg(user, width=700, height=400):
     """
     유저의 개인 아쿠아리움 SVG 렌더링
     - user 기준으로 Aquarium을 추측하지 않음
@@ -356,7 +352,7 @@ def render_aquarium_svg(user, width=512, height=512):
             </clipPath>
         </defs>
 
-        <rect width="{width}" height="{height}" fill="#001a33" rx="20" ry="20"/>
+        <rect width="{width}" height="{height}" fill="#b8e6fe" rx="20" ry="20"/>
 
         <g clip-path="url(#tank-clip)">
             {f'<image href="{bg_url}" width="{width}" height="{height}" preserveAspectRatio="xMidYMid slice" />' if bg_url else ''}
@@ -367,7 +363,7 @@ def render_aquarium_svg(user, width=512, height=512):
     </svg>
     """
 
-def render_fishtank_svg(repository, user, width=512, height=512):
+def render_fishtank_svg(repository, user, width=700, height=400):
     """
     레포지토리 공용 피시탱크를 특정 유저의 배경 설정에 맞춰 렌더링합니다.
     """
@@ -404,7 +400,7 @@ def render_fishtank_svg(repository, user, width=512, height=512):
     ]
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
-        <rect width="{width}" height="{height}" fill="#050505" rx="15" ry="15" />
+        <rect width="{width}" height="{height}" fill="#b8e6fe" rx="15" ry="15" />
         {f'<image href="{bg_url}" width="{width}" height="{height}" preserveAspectRatio="xMidYMid slice" />' if bg_url else ''}
         <g id="fish-container">
             {''.join(fish_groups)}
