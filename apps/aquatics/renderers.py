@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 # --- Utilities ---
 
+FONT_FAMILY = '"Bungee", "Space Mono", monospace'
+
 def _strip_outer_svg(svg_text: str) -> str:
     """
     가장 바깥쪽 <svg> 태그를 제거하고 내부 요소만 반환합니다.
@@ -238,7 +240,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
 
         /* 라벨 */
         #fish-{fish_id} .label-top {{
-          font-family: sans-serif;
+          font-family: {FONT_FAMILY};
           font-size: {topFont}px;
           font-weight: 700;
           fill: white;
@@ -247,7 +249,7 @@ def render_fish_group(cf, tank_w, tank_h, mode, persona_width_percent=4, padding
           stroke-width: 2px;
         }}
         #fish-{fish_id} .label-bottom {{
-          font-family: sans-serif;
+          font-family: {FONT_FAMILY};
           font-size: {botFont}px;
           font-weight: 400;
           fill: white;
