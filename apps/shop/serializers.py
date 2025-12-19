@@ -1,3 +1,4 @@
+# apps/shop/serializers.py
 from rest_framework import serializers
 from .models import Item, UserCurrency, UserInventory
 from apps.aquatics.models import OwnBackground
@@ -57,4 +58,7 @@ class PurchaseResponseSerializer(serializers.Serializer):
     """구매 결과 응답"""
     detail = serializers.CharField()
     balance = serializers.IntegerField()
-    # 배경 구매 시 unlocked_background_id, 소모품 구매 시 new_quantity 등 상황에 따라 다름
+
+class RerollRequestSerializer(serializers.Serializer):
+    """리롤 요청 바디 검증 (repo_id 대신 fish_id 사용)"""
+    fish_id = serializers.IntegerField(help_text="리롤할 대상 물고기(ContributionFish)의 고유 ID")
