@@ -297,44 +297,82 @@ class FishtankSvgPreviewView(APIView):
 
         return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
 
-class AquariumSvgPathView(APIView):
-    """
-    로그인 유저의 개인 Aquarium SVG path를 반환
-    - SVG가 없으면 생성(task 호출)
-    """
-    permission_classes = [IsAuthenticated]
+#### embed code view 영역####
+#공통 스키마
+embed_code_response_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        "ok": openapi.Schema(type=openapi.TYPE_BOOLEAN, example=True),
+        "img_url": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example="https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400",
+        ),
+        "html": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example='<a href="https://githubaquarium.store/u/Imggaggu"><img src="https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400" width="700" height="400" /></a>',
+        ),
+        "markdown": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example='[![Imggaggu\'s Aquarium](https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400)](https://githubaquarium.store/u/Imggaggu)',
+        ),
+    },
+    required=["ok", "img_url", "html", "markdown"],
+)
 
-    def get(self, request):
-        user = request.user
-        username = user.username
-
-        # GitHub에서 접근 가능한 render 도메인
-        render_base = getattr(
-            settings,
-            "RENDER_DOMAIN",
-            "https://render.your-service.org",
-        )
-
-        img_url = (
-            f"{render_base}/render/aquarium/{username}"
-            "?width=700&height=400"
-        )
-
-        profile_url = f"https://your-service.org/u/{username}"
-
-        return Response({
-            "ok": True,
-            "user": {
-                "username": username,
+aquarium_path_response_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        "ok": openapi.Schema(type=openapi.TYPE_BOOLEAN, example=True),
+        "user": openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "username": openapi.Schema(type=openapi.TYPE_STRING, example="Imggaggu")
             },
-            "img_url": img_url,
-            "html": f"""<a href="{profile_url}"><img src="{img_url}" width="700" height="400" /></a>""",
-            "markdown": f"""[![{username}'s Aquarium]({img_url})]({profile_url})""",
-        })
+            required=["username"],
+        ),
+        "img_url": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example="https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400",
+        ),
+        "html": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example='<a href="https://githubaquarium.store/u/Imggaggu"><img src="https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400" width="700" height="400" /></a>',
+        ),
+        "markdown": openapi.Schema(
+            type=openapi.TYPE_STRING,
+            example='[![Imggaggu\'s Aquarium](https://render.githubaquarium.store/render/aquarium/Imggaggu?width=700&height=400)](https://githubaquarium.store/u/Imggaggu)',
+        ),
+    },
+    required=["ok", "user", "img_url", "html", "markdown"],
+)
+
+error_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        "ok": openapi.Schema(type=openapi.TYPE_BOOLEAN, example=False),
+        "detail": openapi.Schema(type=openapi.TYPE_STRING, example="Repository not found"),
+    },
+    required=["ok", "detail"],
+)
+
 # path 복사 리드미에 넣을 용도    
 class AquariumEmbedCodeView(APIView):
     permission_classes = [IsAuthenticated]
-
+    @swagger_auto_schema(
+        operation_summary="(로그인 필요) 내 Aquarium Embed Code 반환",
+        operation_description=(
+            "로그인한 유저의 Aquarium을 GitHub README에 붙여넣기 위한 embed 코드를 반환합니다.\n"
+            "- html: <a><img/></a>\n"
+            "- markdown: [![...](img_url)](link_url)\n"
+            "- img_url: render 서버 public endpoint\n"
+            "- 기본 크기: 700x400"
+        ),
+        tags=["Embed Code"],
+        responses={
+            200: openapi.Response("OK", schema=embed_code_response_schema),
+            401: "Unauthorized",
+        },
+    )
     def get(self, request):
         username = request.user.username
         render_base = settings.RENDER_DOMAIN
@@ -352,7 +390,51 @@ class AquariumEmbedCodeView(APIView):
 
 class FishtankEmbedCodeView(APIView):
     permission_classes = [IsAuthenticated]
-
+    @swagger_auto_schema(
+        operation_summary="(로그인 필요) 특정 repo Fishtank Embed Code 반환",
+        operation_description=(
+            "repo_id에 해당하는 Fishtank를 GitHub README에 붙여넣기 위한 embed 코드를 반환합니다.\n\n"
+            "- path param: repo_id\n"
+            "- img_url: render 서버 public endpoint\n"
+            "- 기본 크기: 700x400"
+        ),
+        tags=["Embed Code"],
+        manual_parameters=[
+            openapi.Parameter(
+                name="repo_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                description="Repository ID",
+                required=True,
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                "OK",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "ok": openapi.Schema(type=openapi.TYPE_BOOLEAN, example=True),
+                        "img_url": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="https://render.githubaquarium.store/render/fishtank/Imggaggu/12?width=700&height=400",
+                        ),
+                        "html": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example='<a href="https://githubaquarium.store/repo/12"><img src="https://render.githubaquarium.store/render/fishtank/Imggaggu/12?width=700&height=400" width="700" height="400" /></a>',
+                        ),
+                        "markdown": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example='[![owner/repo](https://render.githubaquarium.store/render/fishtank/Imggaggu/12?width=700&height=400)](https://githubaquarium.store/repo/12)',
+                        ),
+                    },
+                    required=["ok", "img_url", "html", "markdown"],
+                ),
+            ),
+            404: openapi.Response("Not Found", schema=error_schema),
+            401: "Unauthorized",
+        },
+    )
     def get(self, request, repo_id: int):
         repo = Repository.objects.filter(id=repo_id).first()
         if not repo:
