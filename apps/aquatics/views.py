@@ -224,7 +224,8 @@ class AquariumFishVisibilityUpdateView(APIView):
     @swagger_auto_schema(
         operation_summary="내 아쿠아리움 물고기 배치 설정",
         request_body=FishVisibilityBulkUpdateSerializer,
-        responses={200: "배치 완료"}
+        responses={200: "배치 완료"},
+        tags=["Personal Aquarium"],
     )
     def post(self, request):
         serializer = FishVisibilityBulkUpdateSerializer(data=request.data)
