@@ -7,8 +7,8 @@ uv run manage.py migrate
 uv run manage.py graph_models -a -o erd.png
 uv run manage.py show_urls
 uv run ruff check . --fix
-git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > allcode.txt
 tree -L 4 -I ".venv|__pycache__|.ruff_cache|staticfiles_collected|logs" > structure.txt
+git ls-files '*.py' | xargs -I {} sh -c 'echo "\n=== {} ===" && cat {}'  > allcode.txt
 
 uv run python manage.py init_items # 커스텀
 uv run python manage.py createsuperuser # 관리자 페이지용

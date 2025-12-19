@@ -4,6 +4,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .models import Aquarium, Fishtank, OwnBackground, ContributionFish, FishtankSetting
@@ -76,10 +77,12 @@ class FishtankDetailView(generics.RetrieveAPIView):
         repository = get_object_or_404(Repository, id=repo_id)
         fishtank, _ = Fishtank.objects.get_or_create(repository=repository)
         return fishtank
-
+    
     @swagger_auto_schema(
         operation_summary="레포지토리 수족관 상세 조회",
-        operation_description="특정 레포지토리에 속한 공용 수족관 정보를 가져옵니다. 모든 기여자의 공개된 물고기가 표시됩니다.",
+        manual_parameters=[
+            openapi.Parameter('repo_id', openapi.IN_PATH, description="레포지토리의 DB ID", type=openapi.TYPE_INTEGER)
+        ],
         responses={200: FishtankDetailSerializer()}
     )
     def get(self, request, *args, **kwargs):

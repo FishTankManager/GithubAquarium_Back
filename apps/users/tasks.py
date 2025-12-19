@@ -3,9 +3,11 @@ import logging
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
+from django_q.tasks import async_task
 from github import Github, GithubException
 from apps.repositories.models import Repository, Contributor, Commit
 from apps.shop.models import UserCurrency, PointLog
+from apps.aquatics.logic import update_or_create_contribution_fish
 
 COMMIT_REWARD_PER_POINT = 10  # 1 커밋당 지급할 포인트
 
@@ -180,6 +182,16 @@ def _sync_contributors(repository_model: Repository, repo_obj):
             if contributor.commit_count != new_count:
                 contributor.commit_count = new_count
                 contributor.save(update_fields=['commit_count'])
+                
+            # [추가] 물고기 진화/할당 로직 호출
+            contributor_model = Contributor.objects.get(repository=repository_model, user=user_obj)
+            update_or_create_contribution_fish(contributor_model)
+            
+            # [추가] 개인 아쿠아리움 SVG 갱신 예약
+            async_task('apps.aquatics.tasks.generate_aquarium_svg_task', user_obj.id)
+
+    # [추가] 해당 레포지토리 공용 수족관 SVG 갱신 예약
+    async_task('apps.aquatics.tasks.generate_fishtank_svg_task', repository_model.id)
 
 
 def _sync_commits(repository_model: Repository, repo_obj):

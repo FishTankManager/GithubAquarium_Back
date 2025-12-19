@@ -78,6 +78,7 @@ class Aquarium(models.Model):
         blank=True,
         help_text="The relative path to the generated SVG file."
     )
+    updated_at = models.DateTimeField(auto_now=True) # 추가
 
     def __str__(self):
         return f"{self.user.username}'s Aquarium"
@@ -98,6 +99,7 @@ class Fishtank(models.Model):
         blank=True,
         help_text="The relative path to the generated SVG file."
     )
+    updated_at = models.DateTimeField(auto_now=True) # 추가
 
     def __str__(self):
         return f"Fishtank for {self.repository.name}"
