@@ -369,3 +369,4 @@ Q_CLUSTER = {
 # --- Game Logic Settings ---
 DEFAULT_FISH_GROUP = "ShrimpWich"
 
+RENDER_DOMAIN = "http://localhost:8000" if DEBUG else "https://githubaquarium.store"

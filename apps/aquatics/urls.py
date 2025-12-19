@@ -12,9 +12,14 @@ from .views import (
     #-- render 테스트---
     AquariumSvgPreviewView,
     FishtankSvgPreviewView,
-    #SvgLintView,
-)
+    AquariumEmbedCodeView,
+    FishtankEmbedCodeView,
 
+)
+from .views_render import (
+    PublicAquariumSvgRenderView,
+    PublicFishtankSvgRenderView,
+)
 urlpatterns = [
     # --- 개인 아쿠아리움 관리 ---
     path('aquarium/', AquariumDetailView.as_view(), name='aquarium-detail'),
@@ -33,5 +38,16 @@ urlpatterns = [
     # ---render---
     path("aquarium/svg/preview/", AquariumSvgPreviewView.as_view()),
     path("fishtank/<int:repo_id>/svg/preview/", FishtankSvgPreviewView.as_view()),
-    #path("svg/lint/", SvgLintView.as_view()),
+    #path("fishtank/<int:repo_id>/svg/", FishtankSvgPathView.as_view()),
+    #path("aquarium/svg/", AquariumSvgPathView.as_view()),
+    path(
+        "render/aquarium/<str:username>/",
+        PublicAquariumSvgRenderView.as_view(),
+    ),
+    path(
+        "render/fishtank/<str:username>/<int:repo_id>/",
+        PublicFishtankSvgRenderView.as_view(),
+    ),
+    path("embed/aquarium/", AquariumEmbedCodeView.as_view()),
+    path("embed/fishtank/<int:repo_id>/", FishtankEmbedCodeView.as_view()),
 ]

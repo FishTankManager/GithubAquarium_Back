@@ -24,7 +24,7 @@ from .serializers import (
     FishVisibilityBulkUpdateSerializer
 )
 from apps.aquatics.renderers import render_aquarium_svg, render_fishtank_svg
-
+from apps.aquatics.tasks import generate_aquarium_svg_task,generate_fishtank_svg_task
 import logging
 logger = logging.getLogger(__name__)
 # --- 개인 아쿠아리움 관련 ---
@@ -296,3 +296,77 @@ class FishtankSvgPreviewView(APIView):
             return Response({"svg": svg})
 
         return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+
+class AquariumSvgPathView(APIView):
+    """
+    로그인 유저의 개인 Aquarium SVG path를 반환
+    - SVG가 없으면 생성(task 호출)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        username = user.username
+
+        # GitHub에서 접근 가능한 render 도메인
+        render_base = getattr(
+            settings,
+            "RENDER_DOMAIN",
+            "https://render.your-service.org",
+        )
+
+        img_url = (
+            f"{render_base}/render/aquarium/{username}"
+            "?width=700&height=400"
+        )
+
+        profile_url = f"https://your-service.org/u/{username}"
+
+        return Response({
+            "ok": True,
+            "user": {
+                "username": username,
+            },
+            "img_url": img_url,
+            "html": f"""<a href="{profile_url}"><img src="{img_url}" width="700" height="400" /></a>""",
+            "markdown": f"""[![{username}'s Aquarium]({img_url})]({profile_url})""",
+        })
+# path 복사 리드미에 넣을 용도    
+class AquariumEmbedCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        username = request.user.username
+        render_base = settings.RENDER_DOMAIN
+
+        img_url = f"{render_base}/render/aquarium/{username}?width=700&height=400"
+        profile_url = f"https://githubaquarium.store/u/{username}"
+
+        return Response({
+            "ok": True,
+            "img_url": img_url,
+            "html": f'<a href="{profile_url}"><img src="{img_url}" width="700" height="400" /></a>',
+            "markdown": f'[![{username}\'s Aquarium]({img_url})]({profile_url})',
+        })
+
+
+class FishtankEmbedCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, repo_id: int):
+        repo = Repository.objects.filter(id=repo_id).first()
+        if not repo:
+            return Response({"ok": False, "detail": "Repository not found"}, status=404)
+
+        username = request.user.username
+        render_base = settings.RENDER_DOMAIN
+
+        img_url = f"{render_base}/render/fishtank/{username}/{repo.id}?width=700&height=400"
+        link_url = f"https://githubaquarium.store/repo/{repo.id}"
+
+        return Response({
+            "ok": True,
+            "img_url": img_url,
+            "html": f'<a href="{link_url}"><img src="{img_url}" width="700" height="400" /></a>',
+            "markdown": f'[![{repo.full_name}]({img_url})]({link_url})',
+        })
