@@ -1,3 +1,6 @@
+[![FishTankManager/GithubAquarium_Back](https://githubaquarium.store/render/fishtank/Imggaggu/1?width=700&height=400)](https://githubaquarium.store/repo/1)
+
+
 # uv 설치
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
